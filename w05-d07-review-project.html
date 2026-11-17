@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W05 · D7 · 周复盘与周项目</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --gold:#f5b942; --gold2:#fcd34d; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa; --blue:#60a5fa; --rose:#fb7185;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(245,185,66,.11),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(61,220,151,.08),transparent 62%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--gold);color:#1a1204}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--gold),var(--green));box-shadow:0 0 14px rgba(245,185,66,.7)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--gold);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--gold);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--gold)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--gold);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(245,185,66,.13);
+  color:var(--gold2);padding:1px 6px;border-radius:5px;border:1px solid rgba(245,185,66,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--gold),#fff3c4 45%,var(--green));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--gold);font-weight:700}
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* day cards */
+.days{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:16px 0}
+.day{border:1px solid var(--line2);border-radius:12px;padding:13px 14px;background:var(--panel2);transition:.3s}
+.day .dn{font-family:var(--mono);font-size:10.5px;color:var(--gold);letter-spacing:.1em}
+.day .dt{font-size:14px;font-weight:600;margin:4px 0 6px}
+.day .dd{font-size:12px;color:var(--muted);line-height:1.6}
+.day.on{border-color:var(--gold);box-shadow:0 0 24px rgba(245,185,66,.18)}
+
+/* checklist */
+.check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.check:last-child{border:0}
+.check .bx{flex:0 0 auto;width:17px;height:17px;border-radius:5px;border:1px solid var(--line2);
+  margin-top:4px;display:grid;place-items:center;font-size:11px;color:var(--green)}
+.check.on .bx{border-color:var(--green);background:rgba(61,220,151,.15)}
+
+/* timeline */
+.tl{position:relative;margin:18px 0;padding-left:26px}
+.tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:var(--line2)}
+.tli{position:relative;padding:0 0 16px}
+.tli::before{content:"";position:absolute;left:-24px;top:7px;width:9px;height:9px;border-radius:50%;
+  background:var(--panel2);border:1px solid var(--line2);transition:.3s}
+.tli.on::before{background:var(--gold);border-color:var(--gold);box-shadow:0 0 12px rgba(245,185,66,.6)}
+.tli .tt{font-family:var(--mono);font-size:11px;color:var(--gold)}
+.tli .tc{font-size:13.5px;color:var(--text2);margin-top:2px}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--gold2)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(245,185,66,.38);background:rgba(245,185,66,.06)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--gold);color:var(--gold);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--gold2);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:88px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav>
+  <span class="brand">W05 · D7</span>
+  <a href="#s1">知识地图</a>
+  <a href="#s2">六天回顾</a>
+  <a href="#s3">项目需求</a>
+  <a href="#s4">分层设计</a>
+  <a href="#s5">代码走读</a>
+  <a href="#s6">项目自述</a>
+  <a href="#s7">快问快答</a>
+  <a href="#s8">下周预告</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 05 · DAY 07 · 12.14</p>
+  <h1>周复盘与<em>周项目</em></h1>
+  <p class="lead">今天不学新知识，只做三件事：<b>把六天串成一张网</b>、<b>把代码变成一个能演示的项目</b>、<b>把知识变成能说出口的话</b>。</p>
+  <div class="meta">
+    <span class="pill">任务 <b>复盘 + 交付</b></span>
+    <span class="pill">产出：<b>可演示版本</b></span>
+    <span class="pill">验收：<b>15 分钟讲清楚</b></span>
+  </div>
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>回看「Java 基础与面向对象」知识星图，补齐未掌握节点和课堂笔记</span></div>
+    <div class="kv"><b>02</b><span>迭代本周项目：订单管理 CLI / 基础 REST 服务，提交一个可演示版本</span></div>
+    <div class="kv"><b>03</b><span>完成 10 道本周相关八股快问快答，把错题回填到知识卡片</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / MAP</p>
+  <h2>六天不是六个知识点，是<em>一条链</em></h2>
+  <p class="lead">单独看，每天都是独立的知识；连起来看，它们是同一个问题的层层递进：<b>如何让对象在内存中正确存在、正确比较、正确被容器管理、正确被框架操纵</b>。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>起点：对象怎么活</b></p>
+        <div class="days">
+          <div class="day on"><div class="dn">D1</div><div class="dt">环境与 OOP</div><div class="dd">JDK/JRE/JVM · 栈与堆 · 值传递 · 多态</div></div>
+        </div>
+        <p class="anno">一切从这里开始：对象在堆里，引用在栈里，方法传的是副本。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>接着：对象怎么算"相等"</b></p>
+        <div class="days">
+          <div class="day"><div class="dn">D1</div><div class="dt">环境与 OOP</div><div class="dd">值传递</div></div>
+          <div class="day on"><div class="dn">D2</div><div class="dt">Object 与核心类</div><div class="dd">equals/hashCode · String · Integer · BigDecimal</div></div>
+        </div>
+        <p class="anno">equals 和 hashCode 的契约，直接决定了后面所有容器能不能正常工作。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>然后：对象怎么被容器管</b></p>
+        <div class="days">
+          <div class="day"><div class="dn">D2</div><div class="dt">Object</div><div class="dd">hashCode</div></div>
+          <div class="day on"><div class="dn">D3</div><div class="dt">集合框架</div><div class="dd">HashMap 八步 put · 扩容 · fail-fast · Top-N</div></div>
+        </div>
+        <p class="anno">D2 的 hashCode 在这里变成"桶定位"，D1 的值传递在这里解释"为什么 key 不能改"。</p>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>再然后：代码怎么保证类型与错误可控</b></p>
+        <div class="days">
+          <div class="day"><div class="dn">D3</div><div class="dt">集合</div><div class="dd">泛型容器</div></div>
+          <div class="day on"><div class="dn">D4</div><div class="dt">泛型与异常</div><div class="dd">擦除 · PECS · Result&lt;T&gt; · finally · 资源关闭</div></div>
+        </div>
+      </div>
+      <div data-step="5">
+        <p style="margin-top:0"><b>最后：框架怎么"自动"干活</b></p>
+        <div class="days">
+          <div class="day"><div class="dn">D4</div><div class="dt">泛型</div><div class="dd">类型安全</div></div>
+          <div class="day on"><div class="dn">D5</div><div class="dt">反射与代理</div><div class="dd">Class · 注解 · JDK/CGLIB 代理</div></div>
+        </div>
+        <p class="anno">Spring 的 IoC 和 AOP，就是 D4 的注解 + D5 的反射与代理。</p>
+      </div>
+      <div data-step="6">
+        <p style="margin-top:0"><b>收口：工程化</b></p>
+        <div class="days">
+          <div class="day"><div class="dn">D5</div><div class="dt">反射代理</div><div class="dd">能跑通</div></div>
+          <div class="day on"><div class="dn">D6</div><div class="dt">Maven 与测试</div><div class="dd">依赖治理 · 生命周期 · JUnit · Mockito</div></div>
+        </div>
+        <p class="anno">D6 解决的是"这套代码能不能被别人接手、能不能安全改动"。</p>
+      </div>
+      <div data-step="7">
+        <p style="margin-top:0"><b>全链串起来</b></p>
+        <div class="days">
+          <div class="day on"><div class="dn">D1</div><div class="dt">内存与传递</div><div class="dd">对象在哪、怎么传</div></div>
+          <div class="day on"><div class="dn">D2</div><div class="dt">相等与精度</div><div class="dd">怎么算相等</div></div>
+          <div class="day on"><div class="dn">D3</div><div class="dt">容器</div><div class="dd">怎么组织对象</div></div>
+          <div class="day on"><div class="dn">D4</div><div class="dt">类型与错误</div><div class="dd">怎么不出错</div></div>
+          <div class="day on"><div class="dn">D5</div><div class="dt">反射与代理</div><div class="dd">怎么被框架操纵</div></div>
+          <div class="day on"><div class="dn">D6</div><div class="dt">工程化</div><div class="dd">怎么交付</div></div>
+        </div>
+        <p style="margin-top:10px;color:var(--gold)"><b>面试时能把这条链讲出来，比单独背六个知识点强得多。</b></p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 7</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / REVIEW</p>
+  <h2>六天<em>自检表</em></h2>
+  <p class="lead">逐条打勾。任何一条讲不顺，今天就补掉——这一周是地基，后面的 JVM、Spring、并发全建在上面。</p>
+
+  <div class="card">
+    <div class="check on"><span class="bx">✓</span><span><b>D1</b>　能画出 JDK ⊃ JRE ⊃ JVM，并说清跨平台靠的是字节码</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D1</b>　能用栈帧解释 swap 为什么无效、多态为什么"编译看左运行看右"</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D2</b>　能默写 equals + hashCode 模板，说出为什么必须一起重写</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D2</b>　能解释 String 常量池、Integer 缓存范围、BigDecimal 的 compareTo</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D3</b>　能完整口述 HashMap put 八步，说出容量为什么是 2 的幂</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D3</b>　能写分组统计（merge）和 Top-N（小顶堆）</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D4</b>　能解释类型擦除的后果，用 PECS 说清 extends / super 的方向</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D4</b>　能讲清 finally 三个陷阱，说出 suppressed 异常解决什么问题</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D5</b>　能画出 JDK 动态代理调用链，说清它为什么只能代理接口</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D5</b>　能写出自定义注解 + 反射解析的完整例子</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D6</b>　能说清依赖冲突两条规则、四种 scope、install 执行了哪些阶段</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>D6</b>　能写含 Mockito 打桩 + verify + assertThrows 的测试</span></div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / PROJECT</p>
+  <h2>周项目：<em>订单管理</em></h2>
+  <p class="lead">两条可选路线，选一条做透。目标是<b>能演示、能讲、能改</b>，不是功能多。</p>
+
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h4>路线 A · CLI（推荐，快）</h4>
+      <p style="margin:6px 0 10px;font-size:13px;color:var(--muted)">控制台菜单驱动，纯 JDK，不引框架。</p>
+      <div class="kv"><b>必须</b><span>创建订单、查询订单、按用户统计、退出</span></div>
+      <div class="kv"><b>数据</b><span>内存 <code class="i">Map&lt;Long, Order&gt;</code>，程序退出即丢</span></div>
+      <div class="kv"><b>耗时</b><span>1–2 小时</span></div>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>路线 B · REST（加分）</h4>
+      <p style="margin:6px 0 10px;font-size:13px;color:var(--muted)">Spring Boot + 内存仓储 + 统一 Result。</p>
+      <div class="kv"><b>必须</b><span>POST /orders、GET /orders/{id}、GET /orders?userId=</span></div>
+      <div class="kv"><b>加分</b><span>全局异常处理 + 参数校验 + 单测覆盖</span></div>
+      <div class="kv"><b>耗时</b><span>3–4 小时</span></div>
+    </div>
+  </div>
+
+  <h3>验收标准（做到这些就算过关）</h3>
+  <div class="card tip">
+    <div class="kv"><b>可运行</b><span>一条命令启动，不需要改代码</span></div>
+    <div class="kv"><b>有校验</b><span>金额为负、数量为 0、用户不存在 → 抛出业务异常并友好提示</span></div>
+    <div class="kv"><b>金额正确</b><span>全程 BigDecimal，scale 统一为 2，用 compareTo 比较</span></div>
+    <div class="kv"><b>模型干净</b><span>Order/OrderItem/Product 的 equals 按语义写对（实体按 id，值对象按字段）</span></div>
+    <div class="kv"><b>有测试</b><span>至少 3 个单测：正常创建、库存/数量非法、金额计算</span></div>
+    <div class="kv"><b>能讲</b><span>15 分钟内说清楚</span></div>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / STRUCTURE</p>
+  <h2>分层：<em>先有边界，再有功能</em></h2>
+  <p class="lead">项目小，但分层不能省。目的是让"改需求时只改一层"这件事成立。</p>
+
+  <pre>order-cli/
+├── domain/                   <span class="c">// 领域模型，不依赖任何框架</span>
+│   ├── Order.java            <span class="c">// 聚合根：id、userId、items、status</span>
+│   ├── OrderItem.java        <span class="c">// 价格快照</span>
+│   ├── Product.java          <span class="c">// 不可变</span>
+│   ├── Money.java            <span class="c">// 值对象，封装 BigDecimal</span>
+│   ├── OrderStatus.java      <span class="c">// 枚举</span>
+│   └── BizException.java     <span class="c">// 业务异常</span>
+├── repo/
+│   ├── OrderRepository.java  <span class="c">// 接口（面向接口编程）</span>
+│   └── InMemoryOrderRepo.java<span class="c">// 内存实现</span>
+├── service/
+│   └── OrderService.java     <span class="c">// 编排：校验 → 算价 → 落库</span>
+└── cli/
+    └── Main.java             <span class="c">// 菜单循环，只做输入输出</span></pre>
+
+  <div class="card">
+    <h4>为什么 repo 要抽接口</h4>
+    <p>因为 <b>service 不应该知道数据存在哪</b>。现在放内存，将来换 MySQL 只加一个实现类，service 一行不改——这就是 D5 讲的"面向接口 + 代理"思想在业务层的体现。<br>
+    同时也是 D6 的测试前提：service 的单测可以 <code class="i">mock(OrderRepository.class)</code>，不需要真数据库。</p>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / CODE</p>
+  <h2>关键代码<em>走读</em></h2>
+  <p class="lead">这四段是项目的骨架。注意它们分别用到了本周哪一天的知识。</p>
+
+  <pre><span class="c">// ① 值对象：D2 的 BigDecimal + D1 的封装</span>
+<span class="k">public record</span> <span class="t">Money</span>(<span class="t">BigDecimal</span> amount) <span class="k">implements</span> <span class="t">Comparable</span>&lt;<span class="t">Money</span>&gt; {
+    <span class="k">public</span> <span class="t">Money</span> {
+        <span class="k">if</span> (amount == <span class="k">null</span> || amount.signum() &lt; <span class="n">0</span>)
+            <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.INVALID_AMOUNT);
+        amount = amount.setScale(<span class="n">2</span>, <span class="t">RoundingMode</span>.HALF_UP);   <span class="c">// 紧凑构造器里规整</span>
+    }
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">plus</span>(<span class="t">Money</span> o) { <span class="k">return new</span> <span class="t">Money</span>(amount.add(o.amount)); }
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">times</span>(<span class="k">int</span> n) { <span class="k">return new</span> <span class="t">Money</span>(amount.multiply(<span class="t">BigDecimal</span>.valueOf(n))); }
+    <span class="k">public int</span> <span class="m">compareTo</span>(<span class="t">Money</span> o) { <span class="k">return</span> amount.compareTo(o.amount); }
+}
+
+<span class="c">// ② 实体：D2 的"按 id 判等" + D1 的封装</span>
+<span class="k">public class</span> <span class="t">Order</span> {
+    <span class="k">private final</span> <span class="t">String</span> id;
+    <span class="k">private final long</span> userId;
+    <span class="k">private final</span> <span class="t">List</span>&lt;<span class="t">OrderItem</span>&gt; items = <span class="k">new</span> <span class="t">ArrayList</span>&lt;&gt;();  <span class="c">// D3</span>
+    <span class="k">private</span> <span class="t">OrderStatus</span> status = <span class="t">OrderStatus</span>.CREATED;
+
+    <span class="k">public void</span> <span class="m">addItem</span>(<span class="t">OrderItem</span> item) {
+        <span class="k">if</span> (status != <span class="t">OrderStatus</span>.CREATED)
+            <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.ORDER_LOCKED);
+        items.add(item);
+    }
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">total</span>() {                       <span class="c">// D2 的 BigDecimal + D3 的 Stream</span>
+        <span class="k">return</span> items.stream().map(<span class="t">OrderItem</span>::subtotal)
+                    .reduce(<span class="k">new</span> <span class="t">Money</span>(<span class="t">BigDecimal</span>.ZERO), <span class="t">Money</span>::plus);
+    }
+    <span class="k">@Override public boolean</span> <span class="m">equals</span>(<span class="t">Object</span> o) {   <span class="c">// D2：实体只按 id</span>
+        <span class="k">if</span> (<span class="k">this</span> == o) <span class="k">return true</span>;
+        <span class="k">if</span> (!(o <span class="k">instanceof</span> <span class="t">Order</span> other)) <span class="k">return false</span>;
+        <span class="k">return</span> id.equals(other.id);
+    }
+    <span class="k">@Override public int</span> <span class="m">hashCode</span>() { <span class="k">return</span> id.hashCode(); }
+}
+
+<span class="c">// ③ 服务：D4 的异常 + D6 的可测试性</span>
+<span class="k">public class</span> <span class="t">OrderService</span> {
+    <span class="k">private final</span> <span class="t">OrderRepository</span> repo;      <span class="c">// 依赖接口 → 可 mock</span>
+
+    <span class="k">public</span> <span class="t">Order</span> <span class="m">create</span>(<span class="k">long</span> userId, <span class="t">List</span>&lt;<span class="t">OrderItem</span>&gt; items) {
+        <span class="k">if</span> (items == <span class="k">null</span> || items.isEmpty())
+            <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.EMPTY_ORDER);
+        <span class="t">Order</span> order = <span class="k">new</span> <span class="t">Order</span>(nextId(), userId);
+        items.forEach(order::addItem);
+        repo.save(order);
+        <span class="k">return</span> order;
+    }
+    <span class="k">public</span> <span class="t">Map</span>&lt;<span class="t">Long</span>, <span class="t">Money</span>&gt; <span class="m">sumByUser</span>() {     <span class="c">// D3 的分组统计</span>
+        <span class="t">Map</span>&lt;<span class="t">Long</span>, <span class="t">Money</span>&gt; m = <span class="k">new</span> <span class="t">HashMap</span>&lt;&gt;();
+        <span class="k">for</span> (<span class="t">Order</span> o : repo.findAll()) m.merge(o.getUserId(), o.total(), <span class="t">Money</span>::plus);
+        <span class="k">return</span> m;
+    }
+}
+
+<span class="c">// ④ 测试：D6</span>
+<span class="k">@Test void</span> <span class="m">emptyItemsShouldThrow</span>() {
+    <span class="k">var</span> service = <span class="k">new</span> <span class="t">OrderService</span>(mock(<span class="t">OrderRepository</span>.<span class="k">class</span>));
+    assertThrows(<span class="t">BizException</span>.<span class="k">class</span>, () -&gt; service.create(<span class="n">1L</span>, <span class="t">List</span>.of()));
+}</pre>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / WALKTHROUGH</p>
+  <h2>15 分钟<em>项目自述</em></h2>
+  <p class="lead">面试问"介绍一下你的项目"，最怕讲成流水账。按这个结构走，每一段都在证明一件事。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <div class="tl">
+          <div class="tli on"><div class="tt">0:00 – 2:00　背景与目标</div>
+            <div class="tc">"这是一个订单管理服务，练习目标是把 Java 基础打扎实：值对象、集合、异常、测试。功能不复杂，但每一层都按生产项目的规范写。"</div></div>
+        </div>
+        <p class="anno">先降低预期再展示深度，比一上来堆功能更可信。</p>
+      </div>
+      <div data-step="2">
+        <div class="tl">
+          <div class="tli on"><div class="tt">2:00 – 5:00　分层与职责</div>
+            <div class="tc">"分四层：domain 不依赖框架，repo 抽接口，service 做编排，cli 只做输入输出。这样换存储只要加实现类，service 不改。"</div></div>
+        </div>
+      </div>
+      <div data-step="3">
+        <div class="tl">
+          <div class="tli on"><div class="tt">5:00 – 9:00　技术点深挖（挑两个）</div>
+            <div class="tc">"金额用 BigDecimal，构造时统一 scale=2 并校验非负，比较用 compareTo——因为 equals 会连 scale 一起比。"<br>
+            "订单实体按 id 判等，但 Money 是值对象按全部字段判等，所以我把 scale 在构造器里规整掉了。"</div></div>
+        </div>
+        <p class="anno">这一段是拿分点：能说出"为什么"，而不是"我用了什么"。</p>
+      </div>
+      <div data-step="4">
+        <div class="tl">
+          <div class="tli on"><div class="tt">9:00 – 12:00　一个坑与解决方案</div>
+            <div class="tc">"最初我用 double 算金额，测试里出现了 0.30000000000000004。改成 BigDecimal 后又踩了 equals 的坑——1.0 和 1.00 不相等。最后的方案是值对象在构造时规整 scale。"</div></div>
+        </div>
+        <p class="anno">准备一个真实踩过的坑，比列十个技术点更有说服力。</p>
+      </div>
+      <div data-step="5">
+        <div class="tl">
+          <div class="tli on"><div class="tt">12:00 – 15:00　测试与改进方向</div>
+            <div class="tc">"service 用 Mockito mock 掉 repo，覆盖了正常创建、空订单、金额非法三个场景。下一步想换成 JPA 实现，再补集成测试。"</div></div>
+        </div>
+        <p class="anno">给出"下一步"说明你知道边界在哪，而不是以为自己做完了。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 5</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <p class="kicker">07 / QUICK Q</p>
+  <h2>10 道<em>本周快问快答</em></h2>
+  <p class="lead">每题限时 30 秒。答不出来的就是今天的补课清单。</p>
+
+  <details><summary>Q1　JDK、JRE、JVM 的关系？</summary><p>JDK ⊃ JRE ⊃ JVM。JVM 执行字节码，JRE = JVM + 标准类库，JDK = JRE + 开发工具。跨平台靠字节码 + 各平台各自的 JVM 实现。</p></details>
+  <details><summary>Q2　Java 只有值传递，怎么证明？</summary><p>swap(int,int) 交换后调用方变量不变，因为传的是副本。引用类型传的是地址的副本，所以能改对象内容（o.setX 生效），但改不了原引用（o = new 无效）。</p></details>
+  <details><summary>Q3　重写 equals 为什么必须重写 hashCode？</summary><p>HashMap 先用 hashCode 定位桶，再用 equals 比较。hashCode 不同会落到不同桶，equals 根本没机会执行，导致"相等的对象存进去取不出来"。</p></details>
+  <details><summary>Q4　String 为什么不可变？</summary><p>线程安全可共享、hashCode 可缓存、常量池才能复用、传参不会被篡改。实现上靠 final class + final 字段 + 不暴露内部数组。</p></details>
+  <details><summary>Q5　Integer 缓存的坑？</summary><p>-128~127 走 IntegerCache，同一个对象，== 为 true；超出范围每次 new，== 为 false。比较包装类一律用 equals。</p></details>
+  <details><summary>Q6　HashMap put 的八步？</summary><p>算 hash → table 空则初始化 16 → (n-1)&amp;hash 定位桶 → 桶空就放 → 首节点 hash/equals 相同则覆盖 → TreeNode 走红黑树 → 否则遍历链表尾插（到 8 尝试树化）→ size++ 超阈值 12 则扩容。</p></details>
+  <details><summary>Q7　为什么容量必须是 2 的幂？</summary><p>因为用 (n-1)&amp;hash 定位，n 为 2 的幂时 n-1 是全 1 掩码，等价取模且分布均匀；扩容时还能用 hash&amp;oldCap 判断升降位，无需重算 hash。</p></details>
+  <details><summary>Q8　泛型擦除带来哪些限制？</summary><p>不能 new T()、new T[]、instanceof T、T.class；静态成员不能用 T；f(List&lt;String&gt;) 和 f(List&lt;Integer&gt;) 不能重载（name clash）。</p></details>
+  <details><summary>Q9　JDK 动态代理为什么只能代理接口？</summary><p>生成的 $Proxy0 已经 extends Proxy，Java 单继承，只能通过 implements 成为目标类型。所以没有接口的类要用 CGLIB 生成子类。</p></details>
+  <details><summary>Q10　Maven 依赖冲突怎么排查？</summary><p>dependency:tree 看实际版本，找到引入旧版的依赖加 exclusions，或在 dependencyManagement 里统一锁定版本。运行时 NoSuchMethodError 通常就是低版本覆盖了高版本。</p></details>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <p class="kicker">08 / NEXT</p>
+  <h2>下周预告：<em>W06</em></h2>
+  <p class="lead">「集合源码、IO 与设计模式」—— 会把 D3 的集合从"会用"推进到"读过源码"，并补上 IO 与设计模式两块。</p>
+
+  <div class="card">
+    <div class="kv"><b>D1</b><span>HashMap 源码：哈希扰动、扩容、树化、并发问题、手写简化版 + JMH</span></div>
+    <div class="kv"><b>D2</b><span>ConcurrentHashMap：CAS + 协作扩容、COW、fail-fast，线程安全缓存实战</span></div>
+    <div class="kv"><b>D3</b><span>IO / NIO：BIO/NIO/AIO、Buffer-Channel-Selector、零拷贝、NIO 聊天服务器</span></div>
+    <div class="kv"><b>D4</b><span>设计模式：单例、工厂、策略、模板方法、责任链、代理、观察者 + Spring 中的实际应用</span></div>
+    <div class="kv"><b>D5</b><span>JVM 前置与代码质量：字节码、类加载直觉、javap、SpotBugs/Checkstyle</span></div>
+    <div class="kv"><b>D6</b><span>周项目：订单服务 v1 —— 整合集合、异常、设计模式与单测</span></div>
+    <div class="kv"><b>D7</b><span>周复盘 + 项目 walkthrough</span></div>
+  </div>
+
+  <div class="card tip">
+    <h4>今天的三件事（按顺序做）</h4>
+    <ol style="margin:6px 0 0">
+      <li><b>补课</b>：上面 12 条自检里，把讲不顺的都重看一遍对应页面，别跳过。</li>
+      <li><b>交付</b>：把 CLI 项目跑通，代码提交（哪怕只是本地 git）。<b>没有跑起来的东西不算项目。</b></li>
+      <li><b>口述</b>：对着空气讲一遍 15 分钟版本，录音回听。你会发现"以为自己懂了"和"能讲出来"差很远。</li>
+    </ol>
+  </div>
+
+  <div class="card warn">
+    <h4>如果时间不够，砍功能不砍质量</h4>
+    <p>宁可只做"创建 + 查询 + 统计"三个功能，也不要堆十个半成品。<br>
+    面试官不会因为你功能少扣分，但会因为你<b>说不清为什么这么设计</b>而扣分。</p>
+  </div>
+</section>
+
+<footer>W05 · D7 · 周复盘与周项目　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+  function render() {
+    items.forEach(el => el.classList.toggle('on', +el.dataset.step <= cur));
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } btnPlay.textContent = '▶ 播放'; }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => { if (cur >= max) { stop(); return; } go(cur + 1); }, 1500);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>

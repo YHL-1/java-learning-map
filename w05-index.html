@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W05 索引 · Java 基础与面向对象</title>
+<style>
+:root{
+  --bg:#070b14;--panel:#0e1728;--line:rgba(151,171,209,.15);
+  --text:#e9effc;--text2:#c3cee4;--muted:#8b99b3;--faint:#5d6a83;
+  --java:#ffb454;--green:#3ddc97;--cyan:#22d3ee;--violet:#a78bfa;
+  --mono:"Cascadia Coding","Cascadia Code",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  min-height:100vh;padding:48px clamp(16px,4vw,48px);
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(255,180,84,.10),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(167,139,250,.10),transparent 62%);
+  background-attachment:fixed}
+.wrap{max-width:940px;margin:0 auto}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;color:var(--java);margin:0 0 10px}
+h1{font-size:clamp(26px,3.4vw,38px);margin:0 0 10px;letter-spacing:-.03em;line-height:1.15}
+h1 b{background:linear-gradient(100deg,var(--java),#ffe0a8 45%,#fb7185);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);margin:0 0 26px;font-size:14px;max-width:640px}
+
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin:0 0 8px}
+.bar i{display:block;height:100%;width:100%;border-radius:inherit;
+  background:linear-gradient(90deg,var(--java),#fb7185);box-shadow:0 0 18px rgba(255,180,84,.5)}
+.meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-bottom:34px}
+
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:16px;padding:15px 18px;border-radius:13px;
+  border:1px solid var(--line);background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  text-decoration:none;color:inherit;transition:.22s}
+.row:hover{border-color:rgba(255,180,84,.4);transform:translateX(4px);
+  box-shadow:0 0 24px rgba(255,180,84,.12)}
+.row.todo{opacity:.45}
+.row.todo:hover{transform:none;border-color:var(--line);box-shadow:none}
+.num{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--java);flex:0 0 auto;width:34px}
+.row.todo .num{color:var(--faint)}
+.body{flex:1;min-width:0}
+.title{font-size:15px;font-weight:600;margin-bottom:3px}
+.desc{font-size:12.5px;color:var(--muted)}
+.tag{font-family:var(--mono);font-size:10.5px;padding:3px 9px;border-radius:99px;flex:0 0 auto;
+  border:1px solid rgba(61,220,151,.3);color:var(--green);background:rgba(61,220,151,.08)}
+.row.todo .tag{border-color:var(--line);color:var(--faint);background:transparent}
+
+.note{margin-top:34px;border:1px solid rgba(61,220,151,.24);border-radius:14px;padding:16px 20px;
+  background:linear-gradient(160deg,rgba(61,220,151,.07),transparent)}
+.note b{color:var(--green)}
+.note p{margin:6px 0 0;font-size:13px;color:var(--text2);line-height:1.75}
+footer{margin-top:36px;color:var(--faint);font-size:11.5px;text-align:center;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">WEEK 05 · JAVA 基础与面向对象 · 112 DAY SPRINT</p>
+  <h1>这一周的<b>学习索引</b></h1>
+  <p class="sub">7 天 · 21 个任务 · 约 17.5 小时。每天一个可交互动画页，按顺序看；周项目是「订单管理 CLI / 基础 REST 服务」。</p>
+
+  <div class="bar"><i></i></div>
+  <div class="meta"><span>已完成 7 / 7 天</span><span>进度 100%</span></div>
+
+  <div class="list">
+    <a class="row" href="w05-d01-java-oop.html">
+      <span class="num">D1</span>
+      <span class="body">
+        <span class="title">环境、语法与 OOP</span>
+        <span class="desc">JDK/JRE/JVM · 编译链路 · 栈与堆 · 值传递 · 多态原理 · 接口 vs 抽象类</span>
+      </span>
+      <span class="tag">已就绪</span>
+    </a>
+
+    <a class="row" href="w05-d02-object-core.html">
+      <span class="num">D2</span>
+      <span class="body">
+        <span class="title">Object 与核心类</span>
+        <span class="desc">equals/hashCode 契约 · HashMap 查找 · String 常量池 · Integer 缓存 · BigDecimal · Money 值对象</span>
+      </span>
+      <span class="tag">已就绪</span>
+    </a>
+
+    <a class="row" href="w05-d03-collections.html">
+      <span class="num">D3</span>
+      <span class="body">
+        <span class="title">集合框架入门</span>
+        <span class="desc">List/Set/Map 全景 · ArrayList 扩容 · HashMap 八步 put · 高低位扩容 · fail-fast · 分组与 Top-N</span>
+      </span>
+      <span class="tag">已就绪</span>
+    </a>
+
+    <a class="row" href="w05-d04-generics-exceptions.html">
+      <span class="num">D4</span>
+      <span class="body">
+        <span class="title">泛型与异常</span>
+        <span class="desc">类型擦除 · 桥接方法 · PECS · Result&lt;T&gt; · 异常体系 · finally 三陷阱 · try-with-resources · 自定义异常</span>
+      </span>
+      <span class="tag">已就绪</span>
+    </a>
+
+    <a class="row" href="w05-d05-reflection-proxy.html">
+      <span class="num">D5</span>
+      <span class="body">
+        <span class="title">反射、注解与代理</span>
+        <span class="desc">Class 对象 · 反射调用与性能代价 · 自定义注解 · JDK 动态代理调用链 · CGLIB · 字段映射器</span>
+      </span>
+      <span class="tag">已就绪</span>
+    </a>
+
+    <a class="row" href="w05-d06-maven-testing.html">
+      <span class="num">D6</span>
+      <span class="body">
+        <span class="title">Maven 与单元测试</span>
+        <span class="desc">依赖冲突调解 · 六种 scope · 生命周期 · 多模块 · JUnit 5 · Mockito · 测试金字塔</span>
+      </span>
+      <span class="tag">已就绪</span>
+    </a>
+
+    <a class="row" href="w05-d07-review-project.html">
+      <span class="num">D7</span>
+      <span class="body">
+        <span class="title">周复盘 · 周项目</span>
+        <span class="desc">六天知识串联 · 12 条自检 · 订单 CLI 需求与验收 · 分层设计 · 15 分钟项目自述 · 10 道快问快答</span>
+      </span>
+      <span class="tag">已就绪</span>
+    </a>
+  </div>
+
+  <div class="note">
+    <b>看页面的方式</b>
+    <p>每个演示区右下角有「上一步 / 下一步 / ▶ 播放 / 重置」，可以先自己推演再点播放对照。页面完全离线，所有样式与脚本内联，不需要联网。</p>
+    <p><b>验收建议</b>：每页最后一节的「完成标准」是硬指标。D3 的 HashMap put 八步、D4 的类型擦除，如果讲不顺就不要往下走——它们是后面框架源码题的底座。</p>
+  </div>
+
+  <footer>W05 · JAVA 基础与面向对象　·　本索引离线可用</footer>
+</div>
+</body>
+</html>

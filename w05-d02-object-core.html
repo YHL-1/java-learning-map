@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W05 · D2 · Object 与核心类</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --java:#ffb454; --java2:#fb7185; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(34,211,238,.10),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(167,139,250,.11),transparent 62%),
+    radial-gradient(ellipse 50% 35% at 50% 105%,rgba(61,220,151,.07),transparent 60%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--cyan);color:#04141a}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--cyan),var(--violet));box-shadow:0 0 14px rgba(34,211,238,.7)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--cyan);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--cyan);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--cyan)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--cyan);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(34,211,238,.12);
+  color:var(--cyan);padding:1px 6px;border-radius:5px;border:1px solid rgba(34,211,238,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 b{background:linear-gradient(100deg,var(--cyan),#a5f3fc 45%,var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--cyan);font-weight:700}
+.orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.15;pointer-events:none;z-index:-1;
+  animation:float 14s ease-in-out infinite alternate}
+.orb.a{width:420px;height:420px;background:#22d3ee;left:-120px;top:8%}
+.orb.b{width:380px;height:380px;background:#a78bfa;right:-120px;top:26%;animation-delay:-6s}
+@keyframes float{from{transform:translate3d(0,-20px,0)}to{transform:translate3d(30px,26px,0)}}
+
+/* stepper */
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* flow chips */
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+.chip{border:1px solid var(--line2);border-radius:10px;padding:9px 14px;background:var(--panel2);
+  font-family:var(--mono);font-size:12.5px;transition:.35s}
+.chip b{color:var(--cyan)}
+.chip.hit{border-color:var(--green);background:rgba(61,220,151,.14);box-shadow:0 0 22px rgba(61,220,151,.2)}
+.chip.warn{border-color:var(--java2);background:rgba(251,113,133,.12)}
+.arw{color:var(--faint);font-size:14px}
+
+/* bucket */
+.buckets{display:grid;grid-template-columns:repeat(16,1fr);gap:4px;margin:14px 0}
+.bcell{border:1px solid var(--line);border-radius:6px;text-align:center;font-family:var(--mono);
+  font-size:10px;color:var(--faint);padding:8px 0 6px;transition:.35s;background:rgba(255,255,255,.02)}
+.bcell i{display:block;font-style:normal;font-size:9px;color:var(--faint)}
+.bcell.lit{border-color:var(--green);background:rgba(61,220,151,.18);color:var(--green);
+  box-shadow:0 0 18px rgba(61,220,151,.22);transform:translateY(-2px)}
+.bcell.lit2{border-color:var(--java2);background:rgba(251,113,133,.16);color:var(--java2)}
+.bcell .dot{display:block;height:14px;line-height:14px;font-size:10px;color:var(--java)}
+
+/* object cards */
+.objrow{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}
+.ocard{flex:1 1 240px;border:1px solid var(--line2);border-radius:12px;padding:12px 14px;
+  background:var(--panel2);font-family:var(--mono);font-size:12.5px;transition:.4s}
+.ocard .t1{color:var(--muted);font-size:10.5px;letter-spacing:.12em;margin-bottom:6px}
+.ocard .ln{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.ocard .ln em{font-style:normal;color:var(--faint)}
+.ocard.on{border-color:var(--cyan);box-shadow:0 0 24px rgba(34,211,238,.18)}
+.ocard.bad{border-color:var(--java2);box-shadow:0 0 24px rgba(251,113,133,.18)}
+
+/* memory zones */
+.zone{border:1px dashed var(--line2);border-radius:12px;padding:12px;background:rgba(255,255,255,.018)}
+.zone .zh{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--muted);margin-bottom:8px}
+.objpill{display:inline-block;border:1px solid rgba(61,220,151,.35);border-radius:8px;
+  padding:5px 10px;margin:5px 6px 5px 0;font-family:var(--mono);font-size:12px;
+  background:linear-gradient(150deg,rgba(61,220,151,.10),rgba(61,220,151,.02));transition:.35s}
+.objpill.hi{border-color:var(--green);box-shadow:0 0 20px rgba(61,220,151,.25)}
+.objpill.dim{opacity:.35}
+.refrow{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12.5px;
+  padding:5px 0;border-bottom:1px dashed rgba(151,171,209,.1)}
+.refrow .nm{color:var(--cyan);min-width:44px}
+.refrow .pt{color:var(--faint)}
+
+/* result table */
+.rtab{font-family:var(--mono);font-size:12px;display:grid;grid-template-columns:auto 1fr 1fr;gap:0;
+  border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0}
+.rtab>div{padding:7px 11px;border-bottom:1px solid rgba(151,171,209,.1)}
+.rtab>div:nth-child(3n+1){background:rgba(255,255,255,.03);color:var(--muted)}
+.rtab .y{color:var(--green)}.rtab .n{color:var(--java2)}
+
+/* cache strip */
+.cache{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:12px 0}
+.cslot{border:1px solid var(--line);border-radius:5px;text-align:center;font-family:var(--mono);
+  font-size:9.5px;padding:6px 0;color:var(--faint);transition:.3s}
+.cslot.hit{border-color:var(--green);background:rgba(61,220,151,.16);color:var(--green)}
+.cslot.miss{border-color:var(--java2);background:rgba(251,113,133,.13);color:var(--java2)}
+
+/* bigdecimal */
+.bdrow{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}
+.bd{flex:1 1 240px;border:1px solid var(--line2);border-radius:12px;padding:14px;background:var(--panel2);text-align:center}
+.bd .val{font-family:var(--mono);font-size:28px;letter-spacing:1px}
+.bd .sc{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:6px}
+.bd.on{border-color:var(--violet);box-shadow:0 0 26px rgba(167,139,250,.25)}
+.bd .verdict{margin-top:10px;font-family:var(--mono);font-size:12.5px}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.05)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--cyan);color:var(--cyan);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--cyan);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:88px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){
+  .grid2{grid-template-columns:1fr}
+  .buckets{grid-template-columns:repeat(8,1fr)}
+  .cache{grid-template-columns:repeat(6,1fr)}
+}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="orb a"></div><div class="orb b"></div>
+
+<nav>
+  <span class="brand">W05 · D2</span>
+  <a href="#s1">Object 契约</a>
+  <a href="#s2">equals</a>
+  <a href="#s3">hashCode</a>
+  <a href="#s4">事故现场</a>
+  <a href="#s5">String</a>
+  <a href="#s6">包装类</a>
+  <a href="#s7">BigDecimal</a>
+  <a href="#s8">值对象</a>
+  <a href="#s9">自测</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 05 · DAY 02 · 12.09</p>
+  <h1>Object 与 <b>核心类</b></h1>
+  <p class="lead">今天只有一件事：把「什么算相等」这个问题彻底搞清楚。从 <code class="i">equals/hashCode</code> 的契约，到 String 常量池、Integer 缓存，再到金额的精度——全都是同一个问题在不同场景下的表现。</p>
+  <div class="meta">
+    <span class="pill">任务 <b>2 / 3</b> · 核心类与值对象</span>
+    <span class="pill">预计 <b>2.5 h</b></span>
+    <span class="pill">产出：<b>Money 值对象</b></span>
+  </div>
+
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>equals/hashCode、String 不可变与常量池、包装类缓存、BigDecimal</span></div>
+    <div class="kv"><b>02</b><span>实现金额计算与值对象，修复 equals/hashCode 与精度问题</span></div>
+    <div class="kv"><b>03</b><span>讲清 String 不可变、Integer 缓存与 BigDecimal 用法</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / OBJECT</p>
+  <h2>所有类的祖宗：<em>Object</em></h2>
+  <p class="lead">Java 里每个类都隐式继承 Object。它定义了 11 个方法，其中真正需要你关心的只有 3 个：<code class="i">equals</code>、<code class="i">hashCode</code>、<code class="i">toString</code>。</p>
+
+  <table>
+    <tr><th>方法</th><th>作用</th><th>要不要重写</th></tr>
+    <tr><td><code>equals(Object)</code></td><td>判断「逻辑相等」</td><td><b>值对象必须重写</b></td></tr>
+    <tr><td><code>hashCode()</code></td><td>返回散列值，供 HashMap/HashSet 定位</td><td><b>重写 equals 就必须重写</b></td></tr>
+    <tr><td><code>toString()</code></td><td>默认输出 <code>类名@十六进制hash</code></td><td>建议重写，日志友好</td></tr>
+    <tr><td><code>getClass()</code></td><td>返回运行时 Class 对象（final）</td><td>不可重写</td></tr>
+    <tr><td><code>clone()</code></td><td>浅拷贝（protected）</td><td>不推荐，优先用拷贝构造器</td></tr>
+    <tr><td><code>finalize()</code></td><td>GC 前回调</td><td>已废弃，别用</td></tr>
+    <tr><td><code>wait / notify / notifyAll</code></td><td>线程通信（final）</td><td>不重写</td></tr>
+  </table>
+
+  <div class="card warn">
+    <h4>默认 equals 到底比较了什么？</h4>
+    <p><code class="i">Object.equals</code> 的实现就是 <code class="i">return this == obj;</code>——<b>比较地址</b>。<br>
+    所以两个内容完全一样的对象，不重写 equals 就永远不相等。这也是为什么 <code class="i">new String("a").equals(new String("a"))</code> 为 true 而 <code class="i">==</code> 为 false：String 重写了 equals。</p>
+  </div>
+
+  <h3>三个概念先分清</h3>
+  <div class="card">
+    <div class="kv"><b>==</b><span>比较<b>值</b>。基本类型比值本身；引用类型比<b>地址</b>（是不是同一个对象）。</span></div>
+    <div class="kv"><b>equals</b><span>方法，默认同 <code class="i">==</code>；重写后可定义为「内容相等」。</span></div>
+    <div class="kv"><b>hashCode</b><span>方法，返回 int 散列值。只被哈希容器（HashMap/HashSet/HashTable）使用。</span></div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / EQUALS</p>
+  <h2>equals 的五条<em>契约</em></h2>
+  <p class="lead">重写 equals 不是"想怎么写就怎么写"，它必须满足数学上的等价关系。破坏任何一条，集合、去重、缓存都会出现难以复现的 bug。</p>
+
+  <div class="card">
+    <div class="kv"><b>自反性</b><span><code class="i">x.equals(x)</code> 必须为 true</span></div>
+    <div class="kv"><b>对称性</b><span><code class="i">x.equals(y)</code> 为 true，则 <code class="i">y.equals(x)</code> 也必须为 true</span></div>
+    <div class="kv"><b>传递性</b><span>x=y 且 y=z，则 x=z</span></div>
+    <div class="kv"><b>一致性</b><span>只要对象状态没变，多次调用结果必须一致（所以别用随机数、时间戳参与比较）</span></div>
+    <div class="kv"><b>非空性</b><span><code class="i">x.equals(null)</code> 必须返回 <b>false</b>，不能抛异常</span></div>
+  </div>
+
+  <h3>标准写法（照抄这段）</h3>
+  <pre><span class="k">@Override</span>
+<span class="k">public boolean</span> <span class="m">equals</span>(<span class="t">Object</span> o) {
+    <span class="k">if</span> (<span class="k">this</span> == o) <span class="k">return true</span>;                    <span class="c">// ① 同一引用，快速返回</span>
+    <span class="k">if</span> (o == <span class="k">null</span> || getClass() != o.getClass()) <span class="k">return false</span>; <span class="c">// ② 类型必须完全一致</span>
+    <span class="t">Order</span> other = (<span class="t">Order</span>) o;
+    <span class="k">return</span> id == other.id
+        &amp;&amp; <span class="t">Objects</span>.equals(name, other.name)              <span class="c">// ③ 引用字段用 Objects.equals</span>
+        &amp;&amp; amount.compareTo(other.amount) == <span class="n">0</span>;             <span class="c">// ④ BigDecimal 用 compareTo</span>
+}
+<span class="k">@Override</span>
+<span class="k">public int</span> <span class="m">hashCode</span>() { <span class="k">return</span> <span class="t">Objects</span>.hash(id, name, amount); }</pre>
+
+  <div class="card warn">
+    <h4>为什么用 <code class="i">getClass()</code> 而不是 <code class="i">instanceof</code>？</h4>
+    <p>用 <code class="i">instanceof</code> 时，子类实例和父类实例可能互相 equals，但方向不同结果不同，<b>破坏对称性</b>。<br>
+    典型场景：<code class="i">Dog extends Animal</code>，规则写不好就出现 <code class="i">a.equals(d)==true</code> 但 <code class="i">d.equals(a)==false</code>。<br>
+    <b>选择</b>：值对象用 <code class="i">getClass()</code> 严格判等；需要对子类开放时才用 <code class="i">instanceof</code>，并且要在父类里加 final 或写明契约。</p>
+  </div>
+
+  <h3>实体 vs 值对象：判等依据不同</h3>
+  <table>
+    <tr><th></th><th>实体 Entity</th><th>值对象 Value Object</th></tr>
+    <tr><td>标志</td><td>有唯一 id，状态会变</td><td>无 id，不可变</td></tr>
+    <tr><td>判等依据</td><td><b>只用 id</b></td><td><b>所有字段</b></td></tr>
+    <tr><td>例子</td><td>User、Order、Product</td><td>Money、Address、DateRange、UserId</td></tr>
+    <tr><td>hashCode</td><td>基于 id</td><td>基于全部字段</td></tr>
+  </table>
+  <p>这条区分很关键：<b>订单的金额从 100 改成 200，它还是同一个订单</b>（id 相同）；但 100 元和 200 元是两个不同的值对象。</p>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / HASHCODE</p>
+  <h2>为什么重写 equals <em>必须</em>重写 hashCode</h2>
+  <p class="lead">因为 HashMap 找元素是「两次判断」：先用 hashCode 定位到<b>哪个桶</b>，再用 equals 在桶里<b>逐个比较</b>。两个对象 equals 相等却 hash 不同，就会落到不同的桶里——明明相等，却永远找不到。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 计算 hash</b>　<code class="i">key.hashCode()</code> 返回一个 int。</p>
+        <div class="flow">
+          <div class="chip">key: Order(id=1)</div><div class="arw">→</div>
+          <div class="chip">hashCode() = <b>0x3A</b> (58)</div>
+        </div>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 扰动函数</b>　<code class="i">h ^ (h &gt;&gt;&gt; 16)</code>，把高位也掺进低位，减少碰撞。</p>
+        <div class="flow">
+          <div class="chip">h = 58</div><div class="arw">→</div>
+          <div class="chip">h ^ (h&gt;&gt;&gt;16) = <b>58</b></div>
+          <div class="anno">（小数值的高 16 位为 0，所以结果不变）</div>
+        </div>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 定位桶</b>　<code class="i">(n-1) &amp; hash</code>，n 是数组长度（默认 16）。</p>
+        <div class="flow"><div class="chip">(16-1) &amp; 58 = 15 &amp; 58 = <b>10</b></div><div class="anno">等价于 hash % 16，但位运算更快</div></div>
+        <div class="buckets">
+          <div class="bcell">0</div><div class="bcell">1</div><div class="bcell">2</div><div class="bcell">3</div>
+          <div class="bcell">4</div><div class="bcell">5</div><div class="bcell">6</div><div class="bcell">7</div>
+          <div class="bcell">8</div><div class="bcell">9</div><div class="bcell lit">10<i>← 落这里</i></div><div class="bcell">11</div>
+          <div class="bcell">12</div><div class="bcell">13</div><div class="bcell">14</div><div class="bcell">15</div>
+        </div>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 桶内比较</b>　先比 <code class="i">==</code>（地址），不等再比 <code class="i">equals</code>（内容）。命中就返回。</p>
+        <div class="buckets">
+          <div class="bcell">0</div><div class="bcell">1</div><div class="bcell">2</div><div class="bcell">3</div>
+          <div class="bcell">4</div><div class="bcell">5</div><div class="bcell">6</div><div class="bcell">7</div>
+          <div class="bcell">8</div><div class="bcell">9</div><div class="bcell lit">10<i>链表</i></div><div class="bcell">11</div>
+          <div class="bcell">12</div><div class="bcell">13</div><div class="bcell">14</div><div class="bcell">15</div>
+        </div>
+        <div class="flow">
+          <div class="chip hit">A(id=1) == key? <b>否</b></div><div class="arw">→</div>
+          <div class="chip hit">A.equals(key)? <b>是</b> → 返回 A</div>
+        </div>
+        <p class="anno">桶内是链表（长度 ≥ 8 且容量 ≥ 64 时转红黑树），所以要逐个 equals 比较。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>所以 hashCode 的约定是</h4>
+    <div class="kv"><b>必须</b><span>equals 相等 → hashCode <b>必须</b>相等</span></div>
+    <div class="kv"><b>允许</b><span>hashCode 相等 → equals <b>可以不</b>相等（这就是哈希冲突）</span></div>
+    <div class="kv"><b>禁止</b><span>用可变字段参与 hashCode 计算——对象进集合后改了字段，就再也找不回来了</span></div>
+  </div>
+
+  <div class="card warn">
+    <h4>最隐蔽的坑：可变对象做 key</h4>
+    <pre style="margin:8px 0 0"><span class="t">Map</span>&lt;<span class="t">User</span>, <span class="t">String</span>&gt; map = <span class="k">new</span> <span class="t">HashMap</span>&lt;&gt;();
+<span class="t">User</span> u = <span class="k">new</span> <span class="t">User</span>(<span class="n">1</span>, <span class="s">"张三"</span>);
+map.put(u, <span class="s">"VIP"</span>);
+u.setName(<span class="s">"李四"</span>);        <span class="c">// name 参与了 hashCode → 哈希值变了</span>
+System.out.println(map.get(u));  <span class="c">// null ← 找不到了！</span></pre>
+    <p style="margin-top:10px"><b>结论</b>：作为 Map key / Set 元素的类，最好不可变；实在要变，判等字段不能变。</p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / INCIDENT</p>
+  <h2>事故现场：<em>只重写 equals</em></h2>
+  <p class="lead">这是面试最爱问的"现场题"。两个对象内容一模一样，<code class="i">equals</code> 返回 true，但放进 HashSet 却有两个，<code class="i">contains</code> 还是 false。走一遍就知道为什么了。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 准备两个"相等"的对象</b>　只重写了 equals（按 id 比较），没重写 hashCode。</p>
+        <div class="objrow">
+          <div class="ocard on">
+            <div class="t1">OBJECT A</div>
+            <div class="ln"><span>id</span><em>1</em></div>
+            <div class="ln"><span>name</span><em>"键盘"</em></div>
+            <div class="ln"><span>hashCode()</span><em style="color:#fb7185">默认地址派生 → 0x3A</em></div>
+          </div>
+          <div class="ocard on">
+            <div class="t1">OBJECT B</div>
+            <div class="ln"><span>id</span><em>1</em></div>
+            <div class="ln"><span>name</span><em>"键盘"</em></div>
+            <div class="ln"><span>hashCode()</span><em style="color:#fb7185">默认地址派生 → 0x9C</em></div>
+          </div>
+        </div>
+        <p class="anno"><code class="i">A.equals(B)</code> → <b style="color:#3ddc97">true</b>（id 相同）。但两个 hashCode 天差地别。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 加入 HashSet</b>　A 落桶 10，B 落桶 12。</p>
+        <div class="buckets">
+          <div class="bcell">0</div><div class="bcell">1</div><div class="bcell">2</div><div class="bcell">3</div>
+          <div class="bcell">4</div><div class="bcell">5</div><div class="bcell">6</div><div class="bcell">7</div>
+          <div class="bcell">8</div><div class="bcell">9</div><div class="bcell lit">10<i>A</i></div><div class="bcell">11</div>
+          <div class="bcell lit2">12<i>B</i></div><div class="bcell">13</div><div class="bcell">14</div><div class="bcell">15</div>
+        </div>
+        <p class="anno">B 根本不看桶 10，直接进了桶 12——<b>equals 从一开始就没机会被调用</b>。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 结果</b></p>
+        <div class="flow">
+          <div class="chip warn">set.size() = <b>2</b></div>
+          <div class="chip warn">set.contains(B) = <b>false</b></div>
+          <div class="chip warn">去重失败</div>
+        </div>
+        <p style="margin-top:12px;color:var(--java2)"><b>两个"相等"的对象同时存在，而且你还取不出来。</b>这就是为什么规则是"重写 equals 必须重写 hashCode"。</p>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 修复：让 hashCode 也按 id 算</b></p>
+        <div class="objrow">
+          <div class="ocard">
+            <div class="t1">OBJECT A</div>
+            <div class="ln"><span>hashCode()</span><em style="color:#3ddc97">Objects.hash(1) = 31</em></div>
+          </div>
+          <div class="ocard">
+            <div class="t1">OBJECT B</div>
+            <div class="ln"><span>hashCode()</span><em style="color:#3ddc97">Objects.hash(1) = 31</em></div>
+          </div>
+        </div>
+        <div class="buckets">
+          <div class="bcell">0</div><div class="bcell">1</div><div class="bcell">2</div><div class="bcell">3</div>
+          <div class="bcell">4</div><div class="bcell">5</div><div class="bcell">6</div><div class="bcell">7</div>
+          <div class="bcell">8</div><div class="bcell">9</div><div class="bcell">10</div><div class="bcell">11</div>
+          <div class="bcell">12</div><div class="bcell">13</div><div class="bcell">14</div><div class="bcell lit">15<i>A + B</i></div>
+        </div>
+        <p style="margin-top:10px;color:var(--green)"><b>现在 size = 1，contains = true。</b>同一桶 → 调 equals → 判定重复 → 不插入。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / STRING</p>
+  <h2>String：<em>不可变</em>与常量池</h2>
+  <p class="lead">String 是 Java 里最特殊的类。它的"不可变"不是为了性能，而是为了<b>安全、共享和缓存</b>。搞懂它，<code class="i">==</code> 和 <code class="i">equals</code> 的经典题就一次性解决了。</p>
+
+  <h3>不可变是怎么做到的</h3>
+  <pre><span class="k">public final class</span> <span class="t">String</span> <span class="k">implements</span> <span class="t">Serializable</span>, <span class="t">Comparable</span>&lt;<span class="t">String</span>&gt; {
+    <span class="k">private final byte</span>[] value;   <span class="c">// Java 9+ 用 byte[] + coder，Latin1/UTF16 省内存</span>
+    <span class="k">private final byte</span> coder;     <span class="c">// 0 = Latin1, 1 = UTF16</span>
+    <span class="k">private int</span> hash;              <span class="c">// 懒计算并缓存 hashCode</span>
+}</pre>
+  <ul>
+    <li><b>class final</b>：不能被继承，防止子类改行为。</li>
+    <li><b>字段 final + private</b>：引用不可变，且没有 setter。</li>
+    <li><b>没有暴露内部数组</b>：构造时拷贝，取用时也不返回原数组。</li>
+    <li><b>所有"修改"方法返回新对象</b>：<code class="i">toUpperCase()</code>、<code class="i">substring()</code>、<code class="i">concat()</code> 都是 new。</li>
+  </ul>
+
+  <div class="grid2">
+    <div class="card tip" style="margin:0">
+      <h4>不可变带来的四个好处</h4>
+      <ul style="margin:0">
+        <li><b>线程安全</b>：不用加锁，天然可共享</li>
+        <li><b>hash 可缓存</b>：算一次存起来，适合做 Map key</li>
+        <li><b>常量池共享</b>：相同字面量只存一份，省内存</li>
+        <li><b>安全</b>：传参给方法不用担心被改，SQL/路径拼接不被注入篡改</li>
+      </ul>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>代价</h4>
+      <p style="margin:0">每次修改都产生新对象。所以循环里 <code class="i">s += x</code> 会创建大量临时对象——这就是为什么要用 <code class="i">StringBuilder</code>。</p>
+    </div>
+  </div>
+
+  <h3>常量池：同样的字面量只存一份</h3>
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 字面量直接进常量池</b></p>
+        <pre style="margin:0 0 12px"><span class="t">String</span> s1 = <span class="s">"abc"</span>;
+<span class="t">String</span> s3 = <span class="s">"abc"</span>;   <span class="c">// 池里已有，直接复用</span></pre>
+        <div class="grid2">
+          <div class="zone"><div class="zh">字符串常量池（堆内）</div>
+            <span class="objpill hi">"abc" @P1</span>
+          </div>
+          <div class="zone"><div class="zh">栈 · 引用</div>
+            <div class="refrow"><span class="nm">s1</span><span class="pt">→</span><span>P1</span></div>
+            <div class="refrow"><span class="nm">s3</span><span class="pt">→</span><span>P1</span></div>
+          </div>
+        </div>
+        <p class="anno"><code class="i">s1 == s3</code> → <b style="color:#3ddc97">true</b>，同一个对象。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② new 一定在堆里新建</b></p>
+        <pre style="margin:0 0 12px"><span class="t">String</span> s2 = <span class="k">new</span> <span class="t">String</span>(<span class="s">"abc"</span>);</pre>
+        <div class="grid2">
+          <div class="zone"><div class="zh">常量池</div><span class="objpill">"abc" @P1</span></div>
+          <div class="zone"><div class="zh">堆 · 普通对象</div><span class="objpill hi">String @H9</span></div>
+        </div>
+        <div class="refrow"><span class="nm">s1</span><span class="pt">→</span><span>P1</span></div>
+        <div class="refrow"><span class="nm">s2</span><span class="pt">→</span><span>H9（新对象，内容相同）</span></div>
+        <p class="anno"><code class="i">s1 == s2</code> → <b style="color:#fb7185">false</b>；<code class="i">s1.equals(s2)</code> → <b style="color:#3ddc97">true</b>。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 编译期常量折叠</b></p>
+        <pre style="margin:0 0 12px"><span class="t">String</span> s4 = <span class="s">"a"</span> + <span class="s">"b"</span> + <span class="s">"c"</span>;   <span class="c">// 编译后就是 "abc"</span>
+<span class="k">final</span> <span class="t">String</span> F = <span class="s">"a"</span>;
+<span class="t">String</span> s5 = F + <span class="s">"bc"</span>;         <span class="c">// final 变量也是编译期常量</span></pre>
+        <div class="card soft" style="margin:8px 0 0">
+          <div class="kv"><b>s1 == s4</b><span style="color:#3ddc97">true —— 编译期已折叠成同一个字面量</span></div>
+          <div class="kv"><b>s1 == s5</b><span style="color:#3ddc97">true —— final 常量参与折叠</span></div>
+        </div>
+        <p class="anno">但如果拼接里有<b>变量</b>（非 final），就变成运行期 <code class="i">StringBuilder.append</code> 或 <code class="i">invokedynamic</code>，结果是新对象。</p>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ intern()：手动入池</b></p>
+        <pre style="margin:0 0 12px"><span class="t">String</span> s6 = <span class="k">new</span> <span class="t">String</span>(<span class="s">"abc"</span>).intern();
+System.out.println(s6 == s1);   <span class="c">// true</span></pre>
+        <p><code class="i">intern()</code> 的语义：如果池里有等值字符串，返回池中那个引用；没有就把当前对象放进去并返回它。</p>
+        <p class="anno">Java 6 常量池在永久代；Java 7 之后移到堆里，所以 intern 不再容易 OOM。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>结果速查表（背这一张就够）</h4>
+    <div class="rtab">
+      <div>表达式</div><div>结果</div><div>原因</div>
+      <div>s1 == s3</div><div class="y">true</div><div>同一常量池对象</div>
+      <div>s1 == s2</div><div class="n">false</div><div>new 出来的新对象</div>
+      <div>s1.equals(s2)</div><div class="y">true</div><div>内容相同</div>
+      <div>s1 == s4</div><div class="y">true</div><div>编译期折叠</div>
+      <div>s2.intern() == s1</div><div class="y">true</div><div>intern 返回池中引用</div>
+      <div>"a" + var == "a" + "b"</div><div class="n">false</div><div>含变量 → 运行期拼接</div>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>拼接到底用了什么？</h4>
+    <ul style="margin:0">
+      <li><b>Java 8</b>：编译成 <code class="i">new StringBuilder().append(...).toString()</code>。</li>
+      <li><b>Java 9+</b>：编译成 <code class="i">invokedynamic</code> + <code class="i">StringConcatFactory</code>，可动态选择最优策略，比 StringBuilder 更快。</li>
+      <li><b>循环内拼接</b>：无论哪个版本都要手动用 StringBuilder，因为每次 <code class="i">s += x</code> 都是新对象。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / WRAPPER</p>
+  <h2>包装类与<em>缓存</em></h2>
+  <p class="lead">8 种基本类型都有包装类。它们有两个必须知道的行为：<b>自动装箱走 valueOf</b>（有缓存），<b>自动拆箱可能 NPE</b>。</p>
+
+  <h3>Integer 缓存：-128 ~ 127</h3>
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 装箱其实调用 <code class="i">Integer.valueOf()</code></b></p>
+        <pre style="margin:0 0 12px"><span class="t">Integer</span> a = <span class="n">100</span>;   <span class="c">// 编译器改写成 Integer.valueOf(100)</span>
+<span class="t">Integer</span> b = <span class="n">100</span>;
+<span class="t">Integer</span> c = <span class="n">1000</span>;
+<span class="t">Integer</span> d = <span class="n">1000</span>;</pre>
+        <div class="cache">
+          <div class="cslot">-128</div><div class="cslot">-64</div><div class="cslot">0</div><div class="cslot">32</div>
+          <div class="cslot">64</div><div class="cslot">96</div><div class="cslot">100</div><div class="cslot">127</div>
+          <div class="cslot" style="opacity:.3">...</div><div class="cslot" style="opacity:.3">...</div>
+          <div class="cslot" style="opacity:.3">...</div><div class="cslot" style="opacity:.3">...</div>
+        </div>
+        <p class="anno">valueOf 内部有个 <code class="i">IntegerCache.cache[]</code> 数组，默认存 -128~127 共 256 个对象，类加载时就建好了。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 100 命中缓存</b>　<code class="i">Integer.valueOf(100)</code> 返回缓存数组里同一个对象。</p>
+        <div class="cache">
+          <div class="cslot">-128</div><div class="cslot">-64</div><div class="cslot">0</div><div class="cslot">32</div>
+          <div class="cslot">64</div><div class="cslot">96</div><div class="cslot hit">100</div><div class="cslot">127</div>
+          <div class="cslot" style="opacity:.3">...</div><div class="cslot" style="opacity:.3">...</div>
+          <div class="cslot" style="opacity:.3">...</div><div class="cslot" style="opacity:.3">...</div>
+        </div>
+        <div class="flow"><div class="chip hit">a → cache[228]</div><div class="arw">=</div><div class="chip hit">b → cache[228]</div></div>
+        <p class="anno"><code class="i">a == b</code> → <b style="color:#3ddc97">true</b>（同一个对象）。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 1000 超出范围</b>　每次都 <code class="i">new Integer(1000)</code>。</p>
+        <div class="flow">
+          <div class="chip warn">c → 堆对象 H1</div><div class="arw">≠</div><div class="chip warn">d → 堆对象 H2</div>
+        </div>
+        <p style="margin-top:10px"><code class="i">c == d</code> → <b style="color:#fb7185">false</b>；但 <code class="i">c.equals(d)</code> → <b style="color:#3ddc97">true</b>。</p>
+        <p class="anno">结论：比较包装类<b>永远用 equals</b>，或用 <code class="i">Objects.equals</code>。用 <code class="i">==</code> 是在赌范围。</p>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 各包装类的缓存范围</b></p>
+        <table style="margin:6px 0 0">
+          <tr><th>类型</th><th>缓存范围</th><th>说明</th></tr>
+          <tr><td>Byte / Short / Integer / Long</td><td>-128 ~ 127</td><td>Integer 上限可用 <code>-XX:AutoBoxCacheMax</code> 调整</td></tr>
+          <tr><td>Character</td><td>0 ~ 127</td><td>ASCII 范围</td></tr>
+          <tr><td>Boolean</td><td>TRUE / FALSE</td><td>只有两个常量</td></tr>
+          <tr><td>Float / Double</td><td><b>无缓存</b></td><td>每次装箱都是新对象</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <h3>自动拆箱的两个陷阱</h3>
+  <div class="grid2">
+    <div class="card warn" style="margin:0">
+      <h4>① null 拆箱直接 NPE</h4>
+      <pre style="margin:8px 0 0"><span class="t">Integer</span> n = <span class="k">null</span>;
+<span class="k">int</span> x = n;   <span class="c">// NullPointerException</span></pre>
+      <p style="margin-top:10px">接口返回 <code class="i">Integer</code> 字段、数据库可空列、Map 取值，都可能拿到 null。<b>拆箱前先判空</b>。</p>
+    </div>
+    <div class="card warn" style="margin:0">
+      <h4>② 三元表达式类型提升</h4>
+      <pre style="margin:8px 0 0"><span class="t">Integer</span> a = <span class="k">null</span>;
+<span class="t">Integer</span> b = <span class="n">1</span>;
+<span class="t">Integer</span> c = flag ? a : b;  <span class="c">// 两者都是 Integer，OK</span>
+
+<span class="k">int</span> d = flag ? a : <span class="n">0</span>;  <span class="c">// 有 int → 整体按 int 处理 → a 被拆箱 → NPE</span></pre>
+      <p style="margin-top:10px">三元运算符里有基本类型时，另一个分支的包装类会被<b>强制拆箱</b>。这个坑非常隐蔽。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <p class="kicker">07 / BIGDECIMAL</p>
+  <h2>BigDecimal：<em>钱的计算</em></h2>
+  <p class="lead">D1 讲了"金额必须用 BigDecimal"，D2 要把它彻底用对。核心就三个概念：<b>精度（scale）、舍入模式、比较方式</b>。</p>
+
+  <h3>先看 double 为什么不行</h3>
+  <pre>System.out.println(<span class="n">0.1</span> + <span class="n">0.2</span>);          <span class="c">// 0.30000000000000004</span>
+System.out.println(<span class="n">1.0</span> - <span class="n">0.9</span>);          <span class="c">// 0.09999999999999998</span>
+System.out.println(<span class="n">0.1</span> * <span class="n">3</span> == <span class="n">0.3</span>);       <span class="c">// false</span></pre>
+  <p>二进制浮点无法精确表示 0.1（就像十进制写不出 1/3）。金额场景差一分钱就是 bug，所以必须用十进制精确表示的 <code class="i">BigDecimal</code>。</p>
+
+  <div class="card warn">
+    <h4>第一个坑：不要用 double 构造 BigDecimal</h4>
+    <pre style="margin:8px 0 0"><span class="k">new</span> <span class="t">BigDecimal</span>(<span class="n">0.1</span>);            <span class="c">// 0.1000000000000000055511151231257827...</span>
+<span class="k">new</span> <span class="t">BigDecimal</span>(<span class="s">"0.1"</span>);          <span class="c">// 0.1  ← 正确</span>
+<span class="t">BigDecimal</span>.valueOf(<span class="n">0.1</span>);         <span class="c">// 0.1  ← 也正确（内部转 String）</span></pre>
+  </div>
+
+  <h3>equals 和 compareTo 不是一回事</h3>
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 两个"看起来一样"的金额</b></p>
+        <div class="bdrow">
+          <div class="bd"><div class="val">1.0</div><div class="sc">unscaled=10, scale=1</div></div>
+          <div class="bd"><div class="val">1.00</div><div class="sc">unscaled=100, scale=2</div></div>
+        </div>
+        <p class="anno">BigDecimal = 未缩放整数 × 10<sup>-scale</sup>。两者数值相等，但 scale 不同。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② <code class="i">equals</code> 连 scale 一起比</b></p>
+        <div class="bdrow">
+          <div class="bd on"><div class="val">1.0</div><div class="verdict" style="color:#fb7185">equals → false</div></div>
+          <div class="bd on"><div class="val">1.00</div><div class="verdict" style="color:#fb7185">scale 不同即不相等</div></div>
+        </div>
+        <p class="anno">这就是「BigDecimal 不能用 equals 比较」的真正原因——不是精度问题，是 <b>scale 参与比较</b>。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ <code class="i">compareTo</code> 只比数值</b></p>
+        <div class="bdrow">
+          <div class="bd on" style="border-color:#3ddc97"><div class="val">1.0</div><div class="verdict" style="color:#3ddc97">compareTo → 0</div></div>
+          <div class="bd on" style="border-color:#3ddc97"><div class="val">1.00</div><div class="verdict" style="color:#3ddc97">相等</div></div>
+        </div>
+        <p style="margin-top:12px;color:var(--green)"><b>规则：判断金额大小一律用 compareTo == 0。</b></p>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 但放进 HashSet 又会出错</b></p>
+        <pre style="margin:0 0 12px"><span class="t">Set</span>&lt;<span class="t">BigDecimal</span>&gt; set = <span class="k">new</span> <span class="t">HashSet</span>&lt;&gt;();
+set.add(<span class="k">new</span> <span class="t">BigDecimal</span>(<span class="s">"1.0"</span>));
+set.add(<span class="k">new</span> <span class="t">BigDecimal</span>(<span class="s">"1.00"</span>));
+System.out.println(set.size());   <span class="c">// 2 ← 因为 hashCode 也不同</span></pre>
+        <p><b>解法</b>：入库前统一 <code class="i">setScale(2, RoundingMode.HALF_UP)</code>，让所有金额的 scale 恒等于 2。这也是 Money 值对象存在的意义。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <h3>除法必须指定精度和舍入</h3>
+  <pre><span class="t">BigDecimal</span> a = <span class="k">new</span> <span class="t">BigDecimal</span>(<span class="s">"10"</span>);
+<span class="t">BigDecimal</span> b = <span class="k">new</span> <span class="t">BigDecimal</span>(<span class="s">"3"</span>);
+a.divide(b);                                              <span class="c">// ArithmeticException: Non-terminating decimal</span>
+a.divide(b, <span class="n">2</span>, <span class="t">RoundingMode</span>.HALF_UP);                      <span class="c">// 3.33 ← 正确</span>
+a.divide(b, <span class="k">new</span> <span class="t">MathContext</span>(<span class="n">4</span>, <span class="t">RoundingMode</span>.HALF_UP));   <span class="c">// 3.333 ← 按有效数字</span></pre>
+
+  <div class="card">
+    <h4>八种舍入模式，只需记住 3 个</h4>
+    <div class="kv"><b>HALF_UP</b><span>四舍五入（最常用，和人的直觉一致）</span></div>
+    <div class="kv"><b>HALF_EVEN</b><span>银行家舍入（.5 向偶数靠），金融统计常用，避免系统性偏差</span></div>
+    <div class="kv"><b>DOWN / UP</b><span>直接截断 / 直接进位，分别用于"不能多收"和"不能少收"的场景</span></div>
+  </div>
+
+  <div class="card warn">
+    <h4>还有两个静态方法的坑</h4>
+    <ul style="margin:0">
+      <li><code class="i">toString()</code> 可能输出<b>科学计数法</b>（<code class="i">1E+2</code>），要给人看用 <code class="i">toPlainString()</code>。</li>
+      <li><code class="i">stripTrailingZeros()</code> 会把 <code class="i">1.00</code> 变成 <code class="i">1</code>，但 scale 可能变成负数（如 <code class="i">1000</code> → <code class="i">1E+3</code>），之后 setScale 会报错。谨慎使用。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <p class="kicker">08 / VALUE OBJECT</p>
+  <h2>任务 2：写一个 <em>Money</em> 值对象</h2>
+  <p class="lead">把今天所有知识点收进一个类里：不可变、自校验、统一 scale、正确的 equals/hashCode、安全的运算。</p>
+
+  <pre><span class="k">public final class</span> <span class="t">Money</span> <span class="k">implements</span> <span class="t">Comparable</span>&lt;<span class="t">Money</span>&gt; {
+
+    <span class="k">public static final</span> <span class="t">Money</span> ZERO = <span class="k">new</span> <span class="t">Money</span>(<span class="t">BigDecimal</span>.ZERO);
+    <span class="k">private static final int</span> SCALE = <span class="n">2</span>;   <span class="c">// 全局统一两位小数</span>
+
+    <span class="k">private final</span> <span class="t">BigDecimal</span> amount;
+
+    <span class="k">private</span> <span class="t">Money</span>(<span class="t">BigDecimal</span> amount) { <span class="k">this</span>.amount = amount; }
+
+    <span class="c">// 工厂方法：唯一入口，所有校验和规整都在这里</span>
+    <span class="k">public static</span> <span class="t">Money</span> <span class="m">of</span>(<span class="t">String</span> yuan) {
+        <span class="k">if</span> (yuan == <span class="k">null</span> || yuan.isBlank()) <span class="k">throw new</span> <span class="t">IllegalArgumentException</span>(<span class="s">"金额不能为空"</span>);
+        <span class="k">return</span> of(<span class="k">new</span> <span class="t">BigDecimal</span>(yuan));   <span class="c">// 用 String 构造，避免 double 误差</span>
+    }
+
+    <span class="k">public static</span> <span class="t">Money</span> <span class="m">of</span>(<span class="t">BigDecimal</span> v) {
+        <span class="k">if</span> (v == <span class="k">null</span>) <span class="k">throw new</span> <span class="t">IllegalArgumentException</span>(<span class="s">"金额不能为 null"</span>);
+        <span class="k">if</span> (v.signum() &lt; <span class="n">0</span>) <span class="k">throw new</span> <span class="t">IllegalArgumentException</span>(<span class="s">"金额不能为负"</span>);
+        <span class="k">return new</span> <span class="t">Money</span>(v.setScale(SCALE, <span class="t">RoundingMode</span>.HALF_UP));  <span class="c">// 统一 scale</span>
+    }
+
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">plus</span>(<span class="t">Money</span> o)  { <span class="k">return new</span> <span class="t">Money</span>(amount.add(o.amount)); }      <span class="c">// 不可变：返回新对象</span>
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">minus</span>(<span class="t">Money</span> o) { <span class="k">return</span> of(amount.subtract(o.amount)); }
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">times</span>(<span class="k">int</span> n)     { <span class="k">return new</span> <span class="t">Money</span>(amount.multiply(<span class="t">BigDecimal</span>.valueOf(n))); }
+
+    <span class="k">public boolean</span> <span class="m">isGreaterThan</span>(<span class="t">Money</span> o) { <span class="k">return</span> amount.compareTo(o.amount) &gt; <span class="n">0</span>; }
+
+    <span class="k">@Override public boolean</span> <span class="m">equals</span>(<span class="t">Object</span> o) {
+        <span class="k">if</span> (<span class="k">this</span> == o) <span class="k">return true</span>;
+        <span class="k">if</span> (o == <span class="k">null</span> || getClass() != o.getClass()) <span class="k">return false</span>;
+        <span class="k">return</span> amount.compareTo(((<span class="t">Money</span>) o).amount) == <span class="n">0</span>;   <span class="c">// 用 compareTo，不用 equals</span>
+    }
+    <span class="k">@Override public int</span> <span class="m">hashCode</span>() { <span class="k">return</span> amount.stripTrailingZeros().hashCode(); }
+
+    <span class="k">@Override public int</span> <span class="m">compareTo</span>(<span class="t">Money</span> o) { <span class="k">return</span> amount.compareTo(o.amount); }
+    <span class="k">@Override public</span> <span class="t">String</span> <span class="m">toString</span>() { <span class="k">return</span> amount.toPlainString() + <span class="s">" 元"</span>; }
+}</pre>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1"><p style="margin-top:0"><b>① 唯一入口</b>　<code class="i">Money.of("399.005")</code> → 构造器私有，外部只能走工厂 → 所有 Money 都是合法且 scale=2 的。</p></div>
+      <div data-step="2"><p style="margin-top:0"><b>② 自动规整</b>　<code class="i">"399.005"</code> → <code class="i">399.01</code>（HALF_UP）。不会出现 <code class="i">399.005</code> 这种没法入账的值。</p></div>
+      <div data-step="3"><p style="margin-top:0"><b>③ 运算返回新对象</b>　<code class="i">a.plus(b)</code> 不修改 a 和 b，天然线程安全，可以放心当 Map key。</p></div>
+      <div data-step="4"><p style="margin-top:0"><b>④ 判等用 compareTo</b>　<code class="i">Money.of("1.0").equals(Money.of("1.00"))</code> → true，因为两边 scale 都被规整成 2。</p></div>
+      <div data-step="5"><p style="margin-top:0"><b>⑤ 防御性拷贝</b>　BigDecimal 本身不可变，所以不用拷贝；但如果字段是 <code class="i">List</code> 或 <code class="i">Date</code>，<b>getter 要返回副本</b>，否则外部能改内部状态。</p></div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 5</span>
+    </div>
+  </div>
+
+  <h3>record 能替代吗？</h3>
+  <pre><span class="k">public record</span> <span class="t">Money</span>(<span class="t">BigDecimal</span> amount) { }</pre>
+  <p><code class="i">record</code> 自动生成 <code class="i">equals/hashCode/toString</code> 和全参构造器，字段天然 final。但它的 equals 用的是字段的 <code class="i">equals</code>——对 BigDecimal 来说就是<b>比 scale</b>，所以 <code class="i">1.0</code> 和 <code class="i">1.00</code> 不相等。</p>
+  <div class="card tip">
+    <h4>结论</h4>
+    <p>简单值对象（<code class="i">UserId</code>、<code class="i">OrderNo</code>）用 record 很爽；但涉及 BigDecimal 的值对象，<b>要手写 equals/hashCode</b>，或者像上面的 Money 一样在构造时把 scale 规整掉——规整之后 record 也能正确工作。</p>
+  </div>
+
+  <div class="card warn">
+    <h4>record 的一个坑</h4>
+    <p>如果 record 的字段是<b>可变对象</b>（数组、List、Date），record 的 equals 仍会按引用比较，而且外部能通过 getter 拿到内部集合。<b>record 不等于深度不可变</b>，需要在紧凑构造器里做防御性拷贝。</p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <p class="kicker">09 / SELF CHECK</p>
+  <h2>今天的<em>自测</em></h2>
+  <p class="lead">先自己答，再展开。这一天的题面试出现频率极高，值得背到能脱口而出。</p>
+
+  <details><summary><code class="i">==</code> 和 <code class="i">equals</code> 的区别？</summary>
+    <p><code class="i">==</code> 比较值：基本类型比值，引用类型比地址。<code class="i">equals</code> 是方法，Object 默认实现等同于 <code class="i">==</code>，重写后一般表示"内容相等"。String、包装类都重写了 equals。</p></details>
+
+  <details><summary>equals 的五条契约？</summary>
+    <p>自反、对称、传递、一致、非空（x.equals(null) 返回 false）。破坏对称性最常见，原因是错误地用了 instanceof 却没处理好子类。</p></details>
+
+  <details><summary>为什么重写 equals 必须重写 hashCode？</summary>
+    <p>HashMap 先按 hashCode 定位桶，再在桶内用 equals 比较。hashCode 不同会落到不同的桶，equals 根本没机会执行，导致"相等的对象存进去却取不出来/去重失败"。</p></details>
+
+  <details><summary>hashCode 相同，equals 一定相同吗？</summary>
+    <p>不一定。hashCode 相同只是"哈希冲突"，还需要 equals 判定。反过来 equals 相同则 hashCode 必须相同。</p></details>
+
+  <details><summary>用可变对象当 HashMap 的 key 会怎样？</summary>
+    <p>插入后如果修改了参与 hashCode 计算的字段，哈希值变化，下次 get 会去错误的桶里找，返回 null，且原 entry 永远无法被正常删除，造成内存泄漏。</p></details>
+
+  <details><summary><code class="i">new String("abc")</code> 创建了几个对象？</summary>
+    <p>常量池没有 "abc" 时 2 个（池中字面量 + 堆对象）；已有则 1 个（只有堆对象）。</p></details>
+
+  <details><summary>为什么 String 要设计成不可变？</summary>
+    <p>① 线程安全，可自由共享；② hashCode 可缓存，适合做 Map key；③ 常量池才能安全复用同一份对象；④ 安全性，传参和拼接结果不会被篡改。代价是每次修改都产生新对象。</p></details>
+
+  <details><summary><code class="i">s1 = "abc"</code>、<code class="i">s2 = new String("abc")</code>，s1 == s2 是什么？</summary>
+    <p>false。s1 指向常量池对象，s2 指向堆里新建的对象。<code class="i">s1.equals(s2)</code> 为 true，<code class="i">s2.intern() == s1</code> 为 true。</p></details>
+
+  <details><summary>为什么 <code class="i">Integer a=100,b=100</code> 时 a==b 为 true，1000 时却为 false？</summary>
+    <p>自动装箱调用 Integer.valueOf，-128~127 有 IntegerCache 缓存，返回同一个对象；超出范围每次 new，地址不同。比较包装类一律用 equals。</p></details>
+
+  <details><summary>自动拆箱有哪些坑？</summary>
+    <p>① 包装类为 null 时拆箱抛 NPE；② 三元表达式中若一侧是基本类型，另一侧的包装类会被强制拆箱，null 就炸。参见 <code class="i">flag ? nullableInteger : 0</code>。</p></details>
+
+  <details><summary>BigDecimal 的 equals 和 compareTo 有什么区别？</summary>
+    <p>equals 同时比较数值和 scale（1.0 与 1.00 不相等）；compareTo 只比较数值（相等返回 0）。判断金额是否相等用 compareTo == 0，但要注意 HashSet/HashMap 仍按 equals/hashCode 判断。</p></details>
+
+  <details><summary>为什么不能 <code class="i">new BigDecimal(0.1)</code>？</summary>
+    <p>double 本身就无法精确表示 0.1，构造器会把那个近似值完整带进来，得到 0.1000000000000000055...。应使用 <code class="i">new BigDecimal("0.1")</code> 或 <code class="i">BigDecimal.valueOf(0.1)</code>。</p></details>
+
+  <details><summary>BigDecimal 做除法要注意什么？</summary>
+    <p>必须指定 scale 和 RoundingMode，否则遇到除不尽（如 10/3）会抛 ArithmeticException。</p></details>
+
+  <details><summary>实体和值对象的 equals 分别怎么写？</summary>
+    <p>实体按唯一 id 判等；值对象按全部字段判等，且应设计成不可变（字段 final、无 setter、运算返回新对象）。</p></details>
+
+  <div class="card tip" style="margin-top:28px">
+    <h4>D2 完成标准（自我验收）</h4>
+    <ul>
+      <li>能默写 equals + hashCode 的标准模板（含 getClass 判断）</li>
+      <li>能画 HashMap 查找的四步：hash → 扰动 → 定位桶 → 桶内 equals</li>
+      <li>能解释"只重写 equals"为什么导致去重失败</li>
+      <li>能不看资料说清 s1/s2/s3/s4 的 == 结果及原因</li>
+      <li>能说出 Integer 缓存范围，以及 Float/Double 为什么没有缓存</li>
+      <li>能写出 Money 值对象的核心方法，并说明为什么用 compareTo 判等</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">全中 → 进 D3（集合框架入门：List/Set/Map 与 HashMap put 流程）。卡 2 条以上 → 今天别往下走。</p>
+  </div>
+</section>
+
+<footer>W05 · D2 · Object 与核心类　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+
+  function render() {
+    items.forEach(el => {
+      const s = +el.dataset.step;
+      el.classList.toggle('on', s <= cur);
+    });
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+    btnPlay.textContent = '▶ 播放';
+  }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => {
+      if (cur >= max) { stop(); return; }
+      go(cur + 1);
+    }, 1500);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>

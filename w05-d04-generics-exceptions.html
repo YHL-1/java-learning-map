@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W05 · D4 · 泛型与异常</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --java:#ffb454; --java2:#fb7185; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(167,139,250,.11),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(34,211,238,.09),transparent 62%),
+    radial-gradient(ellipse 50% 35% at 50% 105%,rgba(255,180,84,.06),transparent 60%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--violet);color:#0f0518}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--violet),var(--cyan));box-shadow:0 0 14px rgba(167,139,250,.7)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--violet);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--violet);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--violet)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--violet);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(167,139,250,.13);
+  color:var(--violet);padding:1px 6px;border-radius:5px;border:1px solid rgba(167,139,250,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 b{background:linear-gradient(100deg,var(--violet),#d8b4fe 45%,var(--cyan));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--violet),#d8b4fe 45%,var(--cyan));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--violet);font-weight:700}
+.orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.14;pointer-events:none;z-index:-1;
+  animation:float 14s ease-in-out infinite alternate}
+.orb.a{width:420px;height:420px;background:#a78bfa;left:-120px;top:8%}
+.orb.b{width:380px;height:380px;background:#22d3ee;right:-120px;top:26%;animation-delay:-6s}
+@keyframes float{from{transform:translate3d(0,-20px,0)}to{transform:translate3d(30px,26px,0)}}
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* code compare */
+.codecmp{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.codecmp .cc{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#080e1a}
+.codecmp .cch{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--muted);
+  padding:7px 12px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03)}
+.codecmp pre{margin:0;border:0;border-radius:0;font-size:12.5px}
+
+/* erase visual */
+.erase{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin:16px 0}
+.ebox{border:1px solid var(--line2);border-radius:12px;padding:14px 18px;background:var(--panel2);
+  font-family:var(--mono);font-size:15px;position:relative;transition:.5s}
+.ebox.fade{border-color:var(--java2);color:var(--faint);text-decoration:line-through;opacity:.6}
+.ebox.keep{border-color:var(--green);color:var(--green)}
+.earw{color:var(--faint);font-size:20px}
+
+/* pecs */
+.pecs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.pbox{border:1px solid var(--line2);border-radius:14px;padding:14px 16px;background:var(--panel2)}
+.pbox .ph{font-family:var(--mono);font-size:12px;margin-bottom:10px}
+.pbox.ext .ph{color:var(--cyan)}
+.pbox.sup .ph{color:var(--java)}
+.op{display:flex;align-items:center;gap:8px;font-size:12.5px;font-family:var(--mono);
+  padding:6px 0;border-bottom:1px dashed rgba(151,171,209,.1)}
+.op:last-child{border:0}
+.op .tagx{font-size:10px;padding:1px 6px;border-radius:4px;border:1px solid;flex:0 0 auto}
+.tagx.yes{color:var(--green);border-color:rgba(61,220,151,.35);background:rgba(61,220,151,.1)}
+.tagx.no{color:var(--java2);border-color:rgba(251,113,133,.35);background:rgba(251,113,133,.1)}
+
+/* exception tree */
+.ex{display:flex;flex-direction:column;gap:6px;margin:16px 0}
+.exrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.eboxx{border:1px solid var(--line2);border-radius:9px;padding:6px 12px;font-family:var(--mono);
+  font-size:12px;background:var(--panel2);transition:.25s}
+.eboxx.t{border-color:rgba(167,139,250,.5);color:var(--violet)}
+.eboxx.e{border-color:rgba(251,113,133,.45);color:var(--java2)}
+.eboxx.x{border-color:rgba(34,211,238,.45);color:var(--cyan)}
+.eboxx.c{border-color:rgba(255,180,84,.45);color:var(--java)}
+.eboxx.u{border-color:rgba(61,220,151,.45);color:var(--green)}
+.eboxx:hover{transform:translateX(3px);border-color:var(--violet)}
+.indent1{margin-left:34px}.indent2{margin-left:70px}.indent3{margin-left:106px}
+.lbl{font-size:11.5px;color:var(--faint);font-family:var(--font)}
+
+/* result chain */
+.rchain{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+.rbox{border:1px solid var(--line2);border-radius:10px;padding:9px 13px;background:var(--panel2);
+  font-family:var(--mono);font-size:12px;transition:.35s}
+.rbox.ok{border-color:var(--green);background:rgba(61,220,151,.12)}
+.rbox.bad{border-color:var(--java2);background:rgba(251,113,133,.12)}
+.arw{color:var(--faint)}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--violet)}
+.ok{color:var(--green)}.no{color:var(--java2)}.mid{color:var(--java)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(167,139,250,.38);background:rgba(167,139,250,.06)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--violet);color:var(--violet);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--violet);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:88px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){
+  .grid2,.codecmp,.pecs{grid-template-columns:1fr}
+  .indent1,.indent2,.indent3{margin-left:16px}
+}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="orb a"></div><div class="orb b"></div>
+
+<nav>
+  <span class="brand">W05 · D4</span>
+  <a href="#s1">泛型入门</a>
+  <a href="#s2">类型擦除</a>
+  <a href="#s3">通配符 PECS</a>
+  <a href="#s4">泛型实战</a>
+  <a href="#s5">异常体系</a>
+  <a href="#s6">finally 陷阱</a>
+  <a href="#s7">资源关闭</a>
+  <a href="#s8">自定义异常</a>
+  <a href="#s9">自测</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 05 · DAY 04 · 12.11</p>
+  <h1>泛型与<em>异常</em></h1>
+  <p class="lead">这两块合在一天非常合理：泛型决定你<b>能不能写出通用又类型安全的代码</b>，异常决定你<b>的代码出错时是否可诊断</b>。它们共同构成"工程感"的底子。</p>
+  <div class="meta">
+    <span class="pill">任务 <b>1 / 3</b> · 泛型与异常机制</span>
+    <span class="pill">预计 <b>2.5 h</b></span>
+    <span class="pill">产出：<b>Result&lt;T&gt; + 异常体系</b></span>
+  </div>
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>泛型擦除、通配符 PECS、异常体系、try-with-resources、自定义异常</span></div>
+    <div class="kv"><b>02</b><span>封装统一 Result&lt;T&gt; 与业务异常体系，写资源安全关闭示例</span></div>
+    <div class="kv"><b>03</b><span>解释泛型擦除与 PECS，说明受检/非受检异常</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / GENERICS</p>
+  <h2>泛型解决的是什么问题</h2>
+  <p class="lead">一句话：<b>把类型检查从运行期提前到编译期</b>。没有泛型时，集合里什么都放得进去，取出来还得强转，出错只能等到运行时。</p>
+
+  <div class="codecmp">
+    <div class="cc">
+      <div class="cch">没有泛型（Java 5 之前）</div>
+<pre><span class="t">List</span> list = <span class="k">new</span> <span class="t">ArrayList</span>();
+list.add(<span class="s">"abc"</span>);
+list.add(<span class="n">123</span>);        <span class="c">// 编译通过，但埋雷</span>
+
+<span class="t">String</span> s = (<span class="t">String</span>) list.get(<span class="n">1</span>);
+<span class="c">// 运行时：ClassCastException</span></pre>
+    </div>
+    <div class="cc">
+      <div class="cch">有泛型</div>
+<pre><span class="t">List</span>&lt;<span class="t">String</span>&gt; list = <span class="k">new</span> <span class="t">ArrayList</span>&lt;&gt;();
+list.add(<span class="s">"abc"</span>);
+list.add(<span class="n">123</span>);        <span class="c">// 编译直接报错</span>
+
+<span class="t">String</span> s = list.get(<span class="n">0</span>);  <span class="c">// 不用强转</span></pre>
+    </div>
+  </div>
+
+  <h3>三种泛型</h3>
+  <pre><span class="c">// ① 泛型类</span>
+<span class="k">public class</span> <span class="t">Box</span>&lt;<span class="t">T</span>&gt; {
+    <span class="k">private</span> <span class="t">T</span> value;
+    <span class="k">public void</span> <span class="m">set</span>(<span class="t">T</span> v) { <span class="k">this</span>.value = v; }
+    <span class="k">public</span> <span class="t">T</span> <span class="m">get</span>() { <span class="k">return</span> value; }
+}
+
+<span class="c">// ② 泛型接口</span>
+<span class="k">public interface</span> <span class="t">Converter</span>&lt;<span class="t">S</span>, <span class="t">R</span>&gt; { <span class="t">R</span> <span class="m">convert</span>(<span class="t">S</span> s); }
+
+<span class="c">// ③ 泛型方法（类型参数写在返回值前面）</span>
+<span class="k">public static</span> &lt;<span class="t">T</span>&gt; <span class="t">T</span> <span class="m">first</span>(<span class="t">List</span>&lt;<span class="t">T</span>&gt; list) {
+    <span class="k">return</span> list.get(<span class="n">0</span>);
+}
+
+<span class="c">// ④ 上界：T 必须是 Comparable 的实现</span>
+<span class="k">public static</span> &lt;<span class="t">T</span> <span class="k">extends</span> <span class="t">Comparable</span>&lt;<span class="t">T</span>&gt;&gt; <span class="t">T</span> <span class="m">max</span>(<span class="t">List</span>&lt;<span class="t">T</span>&gt; list) { ... }</pre>
+
+  <div class="card warn">
+    <h4>四种写法别看混</h4>
+    <div class="kv"><b>&lt;T&gt;</b><span>声明一个类型参数（只有声明处能写）</span></div>
+    <div class="kv"><b>List&lt;T&gt;</b><span>使用类型参数</span></div>
+    <div class="kv"><b>List&lt;String&gt;</b><span>使用具体类型（参数化类型）</span></div>
+    <div class="kv"><b>List&lt;?&gt;</b><span>使用通配符（未知类型）</span></div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / TYPE ERASURE</p>
+  <h2>类型擦除：<em>泛型是编译期的幻觉</em></h2>
+  <p class="lead">这是 Java 泛型最核心也最反直觉的一点：<b>泛型信息在编译后就没了</b>。`List&lt;String&gt;` 和 `List&lt;Integer&gt;` 在运行时是同一个类。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 你写的代码</b></p>
+        <pre style="margin:0"><span class="t">List</span>&lt;<span class="t">String</span>&gt; a = <span class="k">new</span> <span class="t">ArrayList</span>&lt;&gt;();
+<span class="t">List</span>&lt;<span class="t">Integer</span>&gt; b = <span class="k">new</span> <span class="t">ArrayList</span>&lt;&gt;();
+<span class="k">class</span> <span class="t">Box</span>&lt;<span class="t">T</span>&gt; { <span class="t">T</span> value; }</pre>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 编译器擦掉尖括号里的东西</b></p>
+        <div class="erase">
+          <div class="ebox fade">List&lt;String&gt;</div>
+          <div class="earw">→</div>
+          <div class="ebox keep">List</div>
+        </div>
+        <div class="erase">
+          <div class="ebox fade">Box&lt;T&gt;</div>
+          <div class="earw">→</div>
+          <div class="ebox keep">Box</div>
+        </div>
+        <p class="anno">类型参数 T 被替换成它的<b>上界</b>：没有上界就是 Object，有 <code class="i">&lt;T extends Number&gt;</code> 就替换成 Number。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 字节码里只剩 Object</b></p>
+        <pre style="margin:0"><span class="c">// Box 编译后实际长这样</span>
+<span class="k">class</span> <span class="t">Box</span> {
+    <span class="t">Object</span> value;          <span class="c">// T 被擦成 Object</span>
+    <span class="t">Object</span> <span class="m">get</span>() { <span class="k">return</span> value; }
+
+    <span class="c">// 编译器在调用处自动插入强转：</span>
+    <span class="c">// String s = (String) box.get();</span>
+}
+<span class="c">// 但编译器会额外记录签名信息（Signature 属性），供反射和调试使用</span></pre>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 证据：运行时它们是同一个 Class</b></p>
+        <pre style="margin:0 0 12px">System.out.println(a.getClass() == b.getClass());   <span class="c">// true</span>
+System.out.println(a.getClass().getName());         <span class="c">// java.util.ArrayList</span></pre>
+        <p style="margin-top:8px;color:var(--violet)"><b>所以泛型不是"运行时的类型"，只是"编译期的约束"。</b>这就是"泛型擦除"。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <h3>擦除带来的五个限制</h3>
+  <table>
+    <tr><th>想做的事</th><th>能不能</th><th>原因 / 替代方案</th></tr>
+    <tr><td><code>new T()</code></td><td class="no">不能</td><td>运行时不知道 T 是啥。需要传 <code>Class&lt;T&gt;</code> 或 Supplier</td></tr>
+    <tr><td><code>new T[10]</code></td><td class="no">不能</td><td>数组需要具体类型。用 <code>(T[]) new Object[10]</code>（不安全）或 <code>Array.newInstance(clazz, n)</code></td></tr>
+    <tr><td><code>x instanceof T</code></td><td class="no">不能</td><td>擦除后没有 T。用 <code>clazz.isInstance(x)</code></td></tr>
+    <tr><td><code>T.class</code></td><td class="no">不能</td><td>同上，需显式传 Class 对象</td></tr>
+    <tr><td>静态成员用 T</td><td class="no">不能</td><td>静态成员属于类本身，与实例的类型参数无关</td></tr>
+  </table>
+
+  <div class="card warn">
+    <h4>最容易踩的一个：重载冲突</h4>
+    <pre style="margin:8px 0 0"><span class="k">void</span> <span class="m">f</span>(<span class="t">List</span>&lt;<span class="t">String</span>&gt; list) { }
+<span class="k">void</span> <span class="m">f</span>(<span class="t">List</span>&lt;<span class="t">Integer</span>&gt; list) { }
+<span class="c">// 编译报错：name clash —— 擦除后两个都是 f(List)</span></pre>
+    <p style="margin-top:10px">但改成不同的<b>原始类型</b>就可以：<code class="i">f(List&lt;String&gt;)</code> 和 <code class="i">f(Set&lt;String&gt;)</code> 不冲突。</p>
+  </div>
+
+  <h3>桥接方法：擦除后多态怎么办</h3>
+  <pre><span class="k">class</span> <span class="t">Parent</span>&lt;<span class="t">T</span>&gt; { <span class="t">T</span> <span class="m">get</span>() { <span class="k">return null</span>; } }
+<span class="k">class</span> <span class="t">Child</span> <span class="k">extends</span> <span class="t">Parent</span>&lt;<span class="t">String</span>&gt; {
+    <span class="k">@Override</span> <span class="t">String</span> <span class="m">get</span>() { <span class="k">return</span> <span class="s">"hi"</span>; }
+}
+<span class="c">// 擦除后父类方法是 Object get()，子类是 String get() —— 签名不一样，谈何重写？</span>
+<span class="c">// 编译器自动生成桥方法：</span>
+<span class="c">// Object get() { return get(); }   ← 内部调用真实的 String get()</span></pre>
+  <p>这就是为什么用反射 <code class="i">getMethods()</code> 时会看到两个 <code class="i">get()</code>，其中一个是 <code class="i">isBridge()</code> 为 true 的合成方法。</p>
+
+  <div class="card">
+    <h4>为什么 Java 要设计成擦除？</h4>
+    <p><b>向后兼容</b>。Java 5 引入泛型时，已经有海量运行在旧 JVM 上的代码和非泛型类库。擦除保证了 <code class="i">List&lt;String&gt;</code> 编译出的字节码能在没有泛型支持的旧虚拟机上跑，也能和旧的 <code class="i">List</code> API 二进制兼容。<br>
+    C# 选择了"具体化泛型"（运行时保留类型信息），代价是必须改 CLR。这是两种取舍。</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / WILDCARD</p>
+  <h2>PECS：<em>Producer Extends, Consumer Super</em></h2>
+  <p class="lead">通配符只有三个符号，但用错方向的后果是编译不过。记住一句话：<b>extends 只能读，super 只能写</b>。</p>
+
+  <div class="pecs">
+    <div class="pbox ext">
+      <div class="ph">List&lt;? extends Animal&gt;</div>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px">上界通配符 · 它是<b>生产者</b></p>
+      <div class="op"><span class="tagx yes">能</span><span>Animal a = list.get(0)</span></div>
+      <div class="op"><span class="tagx no">不能</span><span>list.add(new Dog())</span></div>
+      <div class="op"><span class="tagx no">不能</span><span>list.add(new Animal())</span></div>
+      <p class="anno" style="margin-top:8px">编译器只知道元素"至少是 Animal"，但不知道具体是 Dog 还是 Cat，所以不敢让你往里放。</p>
+    </div>
+    <div class="pbox sup">
+      <div class="ph">List&lt;? super Dog&gt;</div>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px">下界通配符 · 它是<b>消费者</b></p>
+      <div class="op"><span class="tagx yes">能</span><span>list.add(new Dog())</span></div>
+      <div class="op"><span class="tagx yes">能</span><span>list.add(new Husky())</span></div>
+      <div class="op"><span class="tagx no">不能</span><span>Dog d = list.get(0)</span></div>
+      <p class="anno" style="margin-top:8px">编译器只知道"容器能装 Dog"，但取出来可能是 Animal 或 Object，所以只能读成 Object。</p>
+    </div>
+  </div>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 为什么 <code class="i">? extends</code> 不能写</b></p>
+        <pre style="margin:0 0 10px"><span class="t">List</span>&lt;? <span class="k">extends</span> <span class="t">Animal</span>&gt; list = <span class="k">new</span> <span class="t">ArrayList</span>&lt;<span class="t">Dog</span>&gt;();
+<span class="c">// 如果能 add(new Cat())，这个 Dog 列表里就混进了 Cat —— 类型系统崩塌</span>
+list.add(<span class="k">new</span> <span class="t">Cat</span>());   <span class="c">// 编译错误，正是为了拦住上面这种情况</span></pre>
+        <p class="anno">唯一能 add 的是 <code class="i">null</code>（它属于所有类型）。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 为什么 <code class="i">? super</code> 读出来只能是 Object</b></p>
+        <pre style="margin:0 0 10px"><span class="t">List</span>&lt;? <span class="k">super</span> <span class="t">Dog</span>&gt; list = <span class="k">new</span> <span class="t">ArrayList</span>&lt;<span class="t">Animal</span>&gt;();
+<span class="t">Object</span> o = list.get(<span class="n">0</span>);        <span class="c">// 只能这样</span>
+<span class="t">Dog</span> d = list.get(<span class="n">0</span>);           <span class="c">// 编译错误：可能是 Animal</span></pre>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ JDK 里的标准例子</b></p>
+        <pre style="margin:0 0 10px"><span class="c">// src 只被读出来（生产）→ extends；dest 只被写进去（消费）→ super</span>
+<span class="k">public static</span> &lt;<span class="t">T</span>&gt; <span class="k">void</span> <span class="m">copy</span>(<span class="t">List</span>&lt;? <span class="k">super</span> <span class="t">T</span>&gt; dest, <span class="t">List</span>&lt;? <span class="k">extends</span> <span class="t">T</span>&gt; src) {
+    <span class="k">for</span> (<span class="t">T</span> t : src) dest.add(t);
+}</pre>
+        <p class="anno">这句签名是 PECS 最经典的教材，值得背下来当例子用。</p>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 无界通配符 <code class="i">&lt;?&gt;</code> 的用途</b></p>
+        <pre style="margin:0 0 10px"><span class="k">void</span> <span class="m">printAll</span>(<span class="t">List</span>&lt;?&gt; list) {           <span class="c">// 能接收 List&lt;String&gt;、List&lt;Integer&gt;…</span>
+    <span class="k">for</span> (<span class="t">Object</span> o : list) System.out.println(o);
+}
+<span class="c">// 注意：void printAll(List&lt;Object&gt;) 不行！List&lt;String&gt; 不是 List&lt;Object&gt; 的子类型</span></pre>
+        <p style="margin-top:8px;color:var(--violet)"><b>这是泛型不变性（invariance）</b>：<code class="i">List&lt;String&gt;</code> 和 <code class="i">List&lt;Object&gt;</code> 没有继承关系，所以要用 <code class="i">&lt;?&gt;</code> 或 <code class="i">&lt;? extends Object&gt;</code>。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="card tip">
+    <h4>记住这个口诀</h4>
+    <p><b>P</b>roducer <b>E</b>xtends —— 你要从里面<b>读</b>数据，用 extends。<br>
+       <b>C</b>onsumer <b>S</b>uper —— 你要往里面<b>写</b>数据，用 super。<br>
+       既是生产者又是消费者（既要读又要写）—— <b>别用通配符</b>，用精确类型 <code class="i">&lt;T&gt;</code>。</p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / PRACTICE</p>
+  <h2>任务 2：统一返回 <em>Result&lt;T&gt;</em></h2>
+  <p class="lead">这是后端项目里出场率最高的泛型类：用一个类型参数承载"成功时的数据"，同时把错误码和错误信息收进同一个结构。</p>
+
+  <pre><span class="k">public final class</span> <span class="t">Result</span>&lt;<span class="t">T</span>&gt; {
+
+    <span class="k">private final boolean</span> success;
+    <span class="k">private final</span> <span class="t">String</span> code;
+    <span class="k">private final</span> <span class="t">String</span> message;
+    <span class="k">private final</span> <span class="t">T</span> data;
+
+    <span class="k">private</span> <span class="t">Result</span>(<span class="k">boolean</span> success, <span class="t">String</span> code, <span class="t">String</span> message, <span class="t">T</span> data) {
+        <span class="k">this</span>.success = success; <span class="k">this</span>.code = code;
+        <span class="k">this</span>.message = message; <span class="k">this</span>.data = data;
+    }
+
+    <span class="c">// 泛型方法：类型参数由调用方推断</span>
+    <span class="k">public static</span> &lt;<span class="t">T</span>&gt; <span class="t">Result</span>&lt;<span class="t">T</span>&gt; <span class="m">ok</span>(<span class="t">T</span> data) {
+        <span class="k">return new</span> <span class="t">Result</span>&lt;&gt;(<span class="k">true</span>, <span class="s">"0"</span>, <span class="s">"成功"</span>, data);
+    }
+    <span class="k">public static</span> &lt;<span class="t">T</span>&gt; <span class="t">Result</span>&lt;<span class="t">T</span>&gt; <span class="m">fail</span>(<span class="t">String</span> code, <span class="t">String</span> msg) {
+        <span class="k">return new</span> <span class="t">Result</span>&lt;&gt;(<span class="k">false</span>, code, msg, <span class="k">null</span>);
+    }
+
+    <span class="c">// 关键：map 让"成功才转换"变得类型安全</span>
+    <span class="k">public</span> &lt;<span class="t">R</span>&gt; <span class="t">Result</span>&lt;<span class="t">R</span>&gt; <span class="m">map</span>(<span class="t">Function</span>&lt;<span class="t">T</span>, <span class="t">R</span>&gt; fn) {
+        <span class="k">return</span> success ? <span class="t">Result</span>.ok(fn.apply(data))
+                        : <span class="t">Result</span>.fail(code, message);
+    }
+
+    <span class="c">// 失败时提供兜底值，避免调用方到处判空</span>
+    <span class="k">public</span> <span class="t">T</span> <span class="m">orElse</span>(<span class="t">T</span> fallback) { <span class="k">return</span> success ? data : fallback; }
+
+    <span class="k">public boolean</span> <span class="m">isSuccess</span>() { <span class="k">return</span> success; }
+    <span class="k">public</span> <span class="t">T</span> <span class="m">getData</span>() { <span class="k">return</span> data; }
+}</pre>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 成功链路</b></p>
+        <div class="rchain">
+          <div class="rbox ok">Result&lt;Order&gt;.ok(order)</div><span class="arw">→</span>
+          <div class="rbox ok">.map(Order::getId)</div><span class="arw">→</span>
+          <div class="rbox ok">Result&lt;Long&gt;</div>
+        </div>
+        <p class="anno"><code class="i">map</code> 的类型参数 R 由传入的函数推断，Result&lt;Order&gt; 变成 Result&lt;Long&gt;，全程编译期检查。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 失败链路自动短路</b></p>
+        <div class="rchain">
+          <div class="rbox bad">Result.fail("4001","库存不足")</div><span class="arw">→</span>
+          <div class="rbox bad">.map(...) 不执行</div><span class="arw">→</span>
+          <div class="rbox bad">原样返回失败</div>
+        </div>
+        <p class="anno">这就是在 Java 里模拟"要么值、要么错误"的最小方案（类似 Rust 的 Result / Scala 的 Either）。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 为什么用泛型而不是 Object</b></p>
+        <pre style="margin:0"><span class="c">// 用 Object：调用方必须强转，且编造不出类型错误提示</span>
+<span class="t">Order</span> o = (<span class="t">Order</span>) result.getData();   <span class="c">// 运行时才可能 CCE</span>
+
+<span class="c">// 用泛型：类型在签名里，IDE 和编译器都帮你检查</span>
+<span class="t">Order</span> o = result.getData();              <span class="c">// 无强转，编译期保证</span></pre>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 3</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>一个真实存在的坑：泛型数组</h4>
+    <pre style="margin:8px 0 0"><span class="t">List</span>&lt;<span class="t">String</span>&gt;[] arr = <span class="k">new</span> <span class="t">List</span>&lt;<span class="t">String</span>&gt;[<span class="n">10</span>];   <span class="c">// 编译错误：generic array creation</span>
+<span class="c">// 原因：数组是协变的且保留运行时类型，泛型擦除后两者规则冲突</span>
+<span class="c">// 替代：用 List&lt;List&lt;String&gt;&gt;，或 (List&lt;String&gt;[]) new List[10]（带警告）</span></pre>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / EXCEPTION</p>
+  <h2>异常体系：<em>Error 不是给你 catch 的</em></h2>
+  <p class="lead">Java 的异常体系只有三个关键词：<b>Throwable</b> 是根，<b>Error</b> 表示系统级崩溃，<b>Exception</b> 才是程序该处理的。而 Exception 又分受检和非受检两类。</p>
+
+  <div class="ex">
+    <div class="exrow"><span class="eboxx t">Throwable</span><span class="lbl">所有可抛出物的根，有 getMessage / printStackTrace / getCause</span></div>
+    <div class="exrow indent1"><span class="eboxx e">Error</span><span class="lbl">JVM 层面问题，程序无力恢复 → 不要 catch</span></div>
+    <div class="exrow indent2"><span class="eboxx e" style="font-size:11.5px">OutOfMemoryError</span><span class="eboxx e" style="font-size:11.5px">StackOverflowError</span><span class="eboxx e" style="font-size:11.5px">NoClassDefFoundError</span></div>
+    <div class="exrow indent1"><span class="eboxx x">Exception</span><span class="lbl">程序应该处理的问题</span></div>
+    <div class="exrow indent2"><span class="eboxx c">受检异常（Checked）</span><span class="lbl">必须 try-catch 或 throws 声明</span></div>
+    <div class="exrow indent3"><span class="eboxx c" style="font-size:11.5px">IOException</span><span class="eboxx c" style="font-size:11.5px">SQLException</span><span class="eboxx c" style="font-size:11.5px">InterruptedException</span><span class="eboxx c" style="font-size:11.5px">ClassNotFoundException</span></div>
+    <div class="exrow indent2"><span class="eboxx u">RuntimeException（非受检）</span><span class="lbl">编译期不强制处理，通常是代码 bug</span></div>
+    <div class="exrow indent3"><span class="eboxx u" style="font-size:11.5px">NullPointerException</span><span class="eboxx u" style="font-size:11.5px">IllegalArgumentException</span><span class="eboxx u" style="font-size:11.5px">IllegalStateException</span><span class="eboxx u" style="font-size:11.5px">ClassCastException</span></div>
+    <div class="exrow indent3"><span class="eboxx u" style="font-size:11.5px">IndexOutOfBoundsException</span><span class="eboxx u" style="font-size:11.5px">ConcurrentModificationException</span><span class="eboxx u" style="font-size:11.5px">ArithmeticException</span></div>
+  </div>
+
+  <div class="card">
+    <h4>受检 vs 非受检，怎么记</h4>
+    <div class="kv"><b>受检</b><span>编译器能预见、调用方<b>有可能合理处理</b>的外部问题：文件不存在、网络断开、数据库连不上</span></div>
+    <div class="kv"><b>非受检</b><span>通常是<b>编程错误</b>：空指针、数组越界、参数非法。这类错误应该改代码，而不是 catch</span></div>
+    <div class="kv"><b>判断法</b><span>问自己："调用方拿到这个异常，能做出有意义的补救动作吗？" 能 → 受检；不能 → 非受检</span></div>
+  </div>
+
+  <div class="card warn">
+    <h4>为什么业务异常几乎都设计成 RuntimeException</h4>
+    <p>如果 <code class="i">BizException extends Exception</code>，那么每一层调用都得 <code class="i">throws</code> 或 try-catch，方法签名会被污染，代码全是噪音。改成 RuntimeException 后，异常可以沿调用链自然上抛，最终由<b>全局异常处理器</b>统一转成 JSON 返回——这是 Spring Boot 项目的标准做法。</p>
+  </div>
+
+  <h3>受检异常的典型写法</h3>
+  <pre><span class="c">// 两种处理方式，二选一，不能都不做</span>
+<span class="k">public void</span> <span class="m">read1</span>(<span class="t">String</span> path) <span class="k">throws</span> <span class="t">IOException</span> {   <span class="c">// ① 抛给上层</span>
+    <span class="t">Files</span>.readString(<span class="t">Path</span>.of(path));
+}
+
+<span class="k">public void</span> <span class="m">read2</span>(<span class="t">String</span> path) {                       <span class="c">// ② 当场处理</span>
+    <span class="k">try</span> {
+        <span class="t">Files</span>.readString(<span class="t">Path</span>.of(path));
+    } <span class="k">catch</span> (<span class="t">IOException</span> e) {
+        <span class="k">throw new</span> <span class="t">UncheckedIOException</span>(<span class="s">"读取失败: "</span> + path, e);  <span class="c">// 转成非受检，保留 cause</span>
+    }
+}</pre>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / FINALLY</p>
+  <h2>finally 与 return 的<em>三个陷阱</em></h2>
+  <p class="lead">这段代码面试出现频率极高，因为它能同时考察执行顺序、值传递、以及 finally 的语义。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① finally 一定会执行吗？</b></p>
+        <pre style="margin:0 0 10px"><span class="k">try</span> { <span class="k">return</span> <span class="n">1</span>; } <span class="k">finally</span> { System.out.println(<span class="s">"finally"</span>); }</pre>
+        <p>会。除了 <code class="i">System.exit()</code>、<code class="i">Runtime.halt()</code>、JVM 崩溃、以及<b>守护线程</b>被终止这几种情况，finally 都会执行。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 陷阱一：finally 里修改基本类型，无效</b></p>
+        <pre style="margin:0 0 10px"><span class="k">static int</span> <span class="m">f</span>() {
+    <span class="k">int</span> x = <span class="n">1</span>;
+    <span class="k">try</span> { <span class="k">return</span> x; }      <span class="c">// 返回值已确定为 1（值拷贝）</span>
+    <span class="k">finally</span> { x = <span class="n">2</span>; }     <span class="c">// 改的是局部变量，返回值不受影响</span>
+}
+<span class="c">// f() == 1</span></pre>
+        <p class="anno">这就是 D1 讲的"值传递"在字节码层面的体现：return 的值在进入 finally 之前就已被复制到返回槽。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 陷阱二：finally 里写 return，会覆盖</b></p>
+        <pre style="margin:0 0 10px"><span class="k">static int</span> <span class="m">g</span>() {
+    <span class="k">try</span> { <span class="k">return</span> <span class="n">1</span>; }
+    <span class="k">finally</span> { <span class="k">return</span> <span class="n">2</span>; }   <span class="c">// 直接覆盖前一个返回值</span>
+}
+<span class="c">// g() == 2</span></pre>
+        <p style="color:var(--java2)">更糟的是：如果 try 里抛了异常，finally 里的 return 会<b>吞掉异常</b>，问题彻底消失，极难排查。</p>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 陷阱三：引用类型会"看似"被修改</b></p>
+        <pre style="margin:0 0 10px"><span class="k">static</span> <span class="t">StringBuilder</span> <span class="m">h</span>() {
+    <span class="t">StringBuilder</span> sb = <span class="k">new</span> <span class="t">StringBuilder</span>(<span class="s">"a"</span>);
+    <span class="k">try</span> { <span class="k">return</span> sb; }
+    <span class="k">finally</span> { sb.append(<span class="s">"b"</span>); }   <span class="c">// 顺着地址改对象 → 生效</span>
+}
+<span class="c">// 返回的 StringBuilder 内容是 "ab"</span></pre>
+        <p class="anno">又是 D1 的值传递：返回的是引用副本，但指向同一个对象，所以 finally 里的内容修改能看见。</p>
+        <p style="margin-top:12px;color:var(--violet)"><b>这就是为什么 D1 的值传递必须真正理解</b>——它在这里、在 D2 的 HashMap、在 D3 的迭代器里反复出现。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>铁律</h4>
+    <p><b>永远不要在 finally 里写 return、break、continue</b>，也不要抛异常。finally 只用来做资源清理。</p>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <p class="kicker">07 / RESOURCES</p>
+  <h2>try-with-resources：<em>资源安全关闭</em></h2>
+  <p class="lead">手写 finally 关闭资源有三个坑：忘记关、关的时候抛异常覆盖了原异常、多个资源关闭顺序写错。try-with-resources 一次全解决。</p>
+
+  <div class="codecmp">
+    <div class="cc">
+      <div class="cch">老写法 · 三个坑</div>
+<pre><span class="t">BufferedReader</span> br = <span class="k">null</span>;
+<span class="k">try</span> {
+    br = <span class="k">new</span> <span class="t">BufferedReader</span>(<span class="k">new</span> <span class="t">FileReader</span>(f));
+    <span class="k">return</span> br.readLine();
+} <span class="k">catch</span> (<span class="t">IOException</span> e) {
+    <span class="k">throw</span> e;
+} <span class="k">finally</span> {
+    <span class="k">if</span> (br != <span class="k">null</span>) {
+        <span class="k">try</span> { br.close(); }
+        <span class="k">catch</span> (<span class="t">IOException</span> ignore) { }  <span class="c">// 吞掉</span>
+    }
+}</pre>
+    </div>
+    <div class="cc">
+      <div class="cch">新写法 · 自动关闭</div>
+<pre><span class="k">try</span> (<span class="t">BufferedReader</span> br =
+        <span class="k">new</span> <span class="t">BufferedReader</span>(<span class="k">new</span> <span class="t">FileReader</span>(f))) {
+    <span class="k">return</span> br.readLine();
+}
+<span class="c">// 无需 finally，关闭异常不会覆盖业务异常</span></pre>
+    </div>
+  </div>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 关闭顺序是「逆序」</b></p>
+        <pre style="margin:0 0 10px"><span class="k">try</span> (<span class="t">A</span> a = <span class="k">new</span> <span class="t">A</span>(); <span class="t">B</span> b = <span class="k">new</span> <span class="t">B</span>(); <span class="t">C</span> c = <span class="k">new</span> <span class="t">C</span>()) {
+}
+<span class="c">// 关闭顺序：C → B → A（后声明的先关，像栈）</span></pre>
+        <p class="anno">编译器会生成嵌套的 try-finally，等价于一层层往里包。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 关键：suppressed 异常</b></p>
+        <pre style="margin:0 0 10px"><span class="k">try</span> (<span class="t">Conn</span> c = open()) {
+    <span class="k">throw new</span> <span class="t">RuntimeException</span>(<span class="s">"业务异常"</span>);   <span class="c">// 主异常</span>
+}
+<span class="c">// close() 时也抛了异常 → 不会覆盖主异常，而是挂到 </span>
+<span class="c">// e.getSuppressed()[0]，主异常照常抛出</span></pre>
+        <p>用 <code class="i">getSuppressed()</code> 取回被抑制的异常。这是老写法最容易丢信息的地方。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 能自动关闭的前提：实现 AutoCloseable</b></p>
+        <pre style="margin:0"><span class="k">public interface</span> <span class="t">AutoCloseable</span> { <span class="k">void</span> <span class="m">close</span>() <span class="k">throws</span> <span class="t">Exception</span>; }
+<span class="k">public interface</span> <span class="t">Closeable</span> <span class="k">extends</span> <span class="t">AutoCloseable</span> { <span class="k">void</span> <span class="m">close</span>() <span class="k">throws</span> <span class="t">IOException</span>; }
+
+<span class="c">// 自己写资源类时，实现它就能用 try-with-resources</span>
+<span class="k">class</span> <span class="t">MyConn</span> <span class="k">implements</span> <span class="t">AutoCloseable</span> {
+    <span class="k">public void</span> <span class="m">close</span>() { System.out.println(<span class="s">"closed"</span>); }
+}</pre>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ Java 9+：可以用已有的 final 变量</b></p>
+        <pre style="margin:0"><span class="t">BufferedReader</span> br = getReader();
+<span class="k">try</span> (br) {          <span class="c">// 直接复用变量，不用再声明</span>
+    br.readLine();
+}</pre>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <p class="kicker">08 / CUSTOM</p>
+  <h2>自定义异常体系</h2>
+  <p class="lead">这部分直接决定你项目的"错误可诊断性"。一个好的异常体系应该做到：错误码可归类、message 带上下文、cause 不丢失、全局统一出口。</p>
+
+  <h3>三层设计</h3>
+  <pre><span class="c">// ① 错误码：用枚举，别用魔法字符串</span>
+<span class="k">public enum</span> <span class="t">ErrorCode</span> {
+    INVALID_PARAM(<span class="s">"4001"</span>, <span class="s">"参数不合法"</span>),
+    STOCK_NOT_ENOUGH(<span class="s">"4002"</span>, <span class="s">"库存不足"</span>),
+    ORDER_NOT_FOUND(<span class="s">"4004"</span>, <span class="s">"订单不存在"</span>),
+    SYSTEM_ERROR(<span class="s">"5000"</span>, <span class="s">"系统繁忙"</span>);
+
+    <span class="k">private final</span> <span class="t">String</span> code;
+    <span class="k">private final</span> <span class="t">String</span> message;
+    <span class="t">ErrorCode</span>(<span class="t">String</span> c, <span class="t">String</span> m) { <span class="k">this</span>.code = c; <span class="k">this</span>.message = m; }
+    <span class="k">public</span> <span class="t">String</span> <span class="m">code</span>() { <span class="k">return</span> code; }
+    <span class="k">public</span> <span class="t">String</span> <span class="m">message</span>() { <span class="k">return</span> message; }
+}
+
+<span class="c">// ② 业务异常：非受检，携带错误码与上下文</span>
+<span class="k">public class</span> <span class="t">BizException</span> <span class="k">extends</span> <span class="t">RuntimeException</span> {
+    <span class="k">private final</span> <span class="t">ErrorCode</span> errorCode;
+
+    <span class="k">public</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span> code) { <span class="k">super</span>(code.message()); <span class="k">this</span>.errorCode = code; }
+    <span class="k">public</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span> code, <span class="t">String</span> detail) {
+        <span class="k">super</span>(code.message() + <span class="s">": "</span> + detail);
+        <span class="k">this</span>.errorCode = code;
+    }
+    <span class="k">public</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span> code, <span class="t">String</span> detail, <span class="t">Throwable</span> cause) {
+        <span class="k">super</span>(code.message() + <span class="s">": "</span> + detail, cause);   <span class="c">// 保留 cause，堆栈不丢</span>
+        <span class="k">this</span>.errorCode = code;
+    }
+    <span class="k">public</span> <span class="t">ErrorCode</span> <span class="m">getErrorCode</span>() { <span class="k">return</span> errorCode; }
+}
+
+<span class="c">// ③ 使用：在业务校验处抛，在全局处理器统一转</span>
+<span class="k">if</span> (stock &lt; qty) <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.STOCK_NOT_ENOUGH,
+        <span class="s">"商品 "</span> + sku + <span class="s">" 剩余 "</span> + stock);</pre>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 异常沿调用链上抛</b></p>
+        <div class="rchain">
+          <div class="rbox bad">Service 抛 BizException</div><span class="arw">↑</span>
+          <div class="rbox bad">Controller 不 catch</div><span class="arw">↑</span>
+          <div class="rbox bad">全局处理器捕获</div>
+        </div>
+        <p class="anno">因为是非受检异常，中间层不需要写任何 throws，代码保持干净。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 全局处理器统一转换</b></p>
+        <pre style="margin:0"><span class="k">@RestControllerAdvice</span>
+<span class="k">public class</span> <span class="t">GlobalExceptionHandler</span> {
+
+    <span class="k">@ExceptionHandler</span>(<span class="t">BizException</span>.<span class="k">class</span>)
+    <span class="k">public</span> <span class="t">Result</span>&lt;<span class="t">Void</span>&gt; <span class="m">handleBiz</span>(<span class="t">BizException</span> e) {
+        log.warn(<span class="s">"业务异常: {}"</span>, e.getMessage());   <span class="c">// warn：可预期，不打堆栈</span>
+        <span class="k">return</span> <span class="t">Result</span>.fail(e.getErrorCode().code(), e.getMessage());
+    }
+
+    <span class="k">@ExceptionHandler</span>(<span class="t">Exception</span>.<span class="k">class</span>)
+    <span class="k">public</span> <span class="t">Result</span>&lt;<span class="t">Void</span>&gt; <span class="m">handleOther</span>(<span class="t">Exception</span> e) {
+        log.error(<span class="s">"未预期异常"</span>, e);                  <span class="c">// error：打完整堆栈</span>
+        <span class="k">return</span> <span class="t">Result</span>.fail(<span class="s">"5000"</span>, <span class="s">"系统繁忙"</span>);   <span class="c">// 不把内部细节暴露给前端</span>
+    }
+}</pre>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 日志级别的选择规则</b></p>
+        <div class="card soft" style="margin:8px 0 0">
+          <div class="kv"><b>warn</b><span>业务异常（库存不足、参数非法）—— 可预期，不打堆栈，避免日志爆炸</span></div>
+          <div class="kv"><b>error</b><span>系统异常（NPE、SQL 异常）—— 打完整堆栈 + 上下文，需要人介入</span></div>
+          <div class="kv"><b>禁止</b><span><code class="i">e.printStackTrace()</code> —— 输出到 stderr，不进日志系统，生产环境等于没记录</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 3</span>
+    </div>
+  </div>
+
+  <h3>异常使用的五条纪律</h3>
+  <div class="card warn">
+    <div class="kv"><b>不要吞</b><span>空的 catch 块是 bug 制造机。至少 log 或重新抛出</span></div>
+    <div class="kv"><b>不要只打印再抛</b><span><code class="i">log.error(...); throw e;</code> 会导致重复记录</span></div>
+    <div class="kv"><b>用异常做流程</b><span>用异常控制正常流程性能极差（fillInStackTrace 开销大），该用返回值判断</span></div>
+    <div class="kv"><b>丢失 cause</b><span><code class="i">throw new X(e.getMessage())</code> 会丢掉原始堆栈，一定要传 cause</span></div>
+    <div class="kv"><b>粒度过细</b><span>每个方法都 try-catch 只会让代码难读，异常应该让它在合适的层级被统一处理</span></div>
+  </div>
+
+  <div class="card tip">
+    <h4>关于异常性能的一个准确说法</h4>
+    <p>异常的<b>抛出</b>代价高（要填充堆栈），但 <code class="i">try-catch</code> 块本身在 JVM 上是零成本的（不产生字节码指令，只记录异常表）。所以"加了 try-catch 会变慢"是错的，<b>真正慢的是抛</b>。</p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <p class="kicker">09 / SELF CHECK</p>
+  <h2>今天的<em>自测</em></h2>
+  <p class="lead">泛型和异常的题偏概念，答的时候要能给出例子。</p>
+
+  <details><summary>什么是类型擦除？举例说明它的影响。</summary>
+    <p>泛型信息只存在于编译期，编译后类型参数被替换为上界（默认 Object），并在调用处插入强制转换。影响：<code class="i">List&lt;String&gt;</code> 与 <code class="i">List&lt;Integer&gt;</code> 运行时是同一个类；不能 new T()、不能 instanceof T、不能用 T.class、静态成员不能用 T、<code class="i">f(List&lt;String&gt;)</code> 与 <code class="i">f(List&lt;Integer&gt;)</code> 不能重载。</p></details>
+
+  <details><summary>为什么 Java 要设计成擦除而不是像 C# 那样具体化？</summary>
+    <p>为了向后兼容。Java 5 引入泛型时，要保证编译产物能在旧 JVM 上运行，并让泛型代码与非泛型旧类库二进制兼容。C# 的具体化泛型需要修改 CLR 运行时。</p></details>
+
+  <details><summary>什么是桥接方法？为什么会有它？</summary>
+    <p>子类继承泛型父类并重写方法时，擦除后父类方法签名是 <code class="i">Object get()</code>，子类是 <code class="i">String get()</code>，签名不一致就无法构成重写。编译器会生成一个合成的桥方法 <code class="i">Object get(){ return get(); }</code> 来维持多态。反射中可通过 isBridge() 识别。</p></details>
+
+  <details><summary>PECS 是什么意思？</summary>
+    <p>Producer Extends, Consumer Super。只读取元素（生产者）用 <code class="i">&lt;? extends T&gt;</code>；只写入元素（消费者）用 <code class="i">&lt;? super T&gt;</code>。典型案例：<code class="i">Collections.copy(List&lt;? super T&gt; dest, List&lt;? extends T&gt; src)</code>。</p></details>
+
+  <details><summary>为什么 <code class="i">List&lt;? extends Animal&gt;</code> 不能 add？</summary>
+    <p>因为它可能是 <code class="i">List&lt;Dog&gt;</code>，也可能是 <code class="i">List&lt;Cat&gt;</code>。若允许 add Animal，就会把 Cat 放进 Dog 列表，破坏类型安全。唯一能 add 的是 null。</p></details>
+
+  <details><summary>为什么 <code class="i">List&lt;String&gt;</code> 不能赋给 <code class="i">List&lt;Object&gt;</code>？</summary>
+    <p>泛型是不变的（invariant）。如果能赋值，就可以通过 <code class="i">List&lt;Object&gt;</code> 往里 add Integer，再按 String 取出，造成 ClassCastException。这正是泛型存在的意义。要接收任意类型用 <code class="i">List&lt;?&gt;</code>。</p></details>
+
+  <details><summary>Error 和 Exception 的区别？</summary>
+    <p>Error 表示 JVM 层面的严重问题（OOM、栈溢出），程序无法恢复，不应该 catch；Exception 表示程序可以处理的问题，分为受检异常（必须处理）和 RuntimeException（编程错误，不强制捕获）。</p></details>
+
+  <details><summary>受检异常和非受检异常怎么选？</summary>
+    <p>问"调用方能否做出有意义的补救"：能（重试、换文件、提示用户）→ 受检；只是编程错误 → RuntimeException。业务异常通常设计成 RuntimeException，避免污染方法签名，由全局处理器统一转换。</p></details>
+
+  <details><summary>为什么 finally 里不要写 return？</summary>
+    <p>① 会覆盖 try 里的返回值；② 会吞掉 try 中抛出的异常，导致问题彻底消失；③ 与 finally 的语义（清理）不符。同理不要写 break/continue，也不要抛异常。</p></details>
+
+  <details><summary><code class="i">try{return x;} finally{x=2;}</code> 返回什么？</summary>
+    <p>返回原值。return 的表达式在进入 finally 前已求值并保存到返回槽，finally 里修改局部变量不影响它。但若 x 是引用类型且 finally 里修改对象<b>内容</b>，则能看见——因为改的是同一个对象。</p></details>
+
+  <details><summary>try-with-resources 相比 finally 好在哪？</summary>
+    <p>① 自动关闭，不会忘记；② 关闭顺序明确（逆序）；③ 关闭时抛的异常作为 suppressed 附加到主异常，不会覆盖原始业务异常；④ 代码更短。前提是资源实现了 AutoCloseable。</p></details>
+
+  <details><summary>什么是 suppressed 异常？</summary>
+    <p>try-with-resources 中，若 try 块抛了主异常、close() 又抛了异常，后者不会覆盖前者，而是记录在主异常的 <code class="i">getSuppressed()</code> 数组里。老写法用 finally 手动 close 时，close 的异常会覆盖业务异常，丢失真正的错因。</p></details>
+
+  <details><summary>什么时候不该用异常？</summary>
+    <p>① 用异常控制正常流程（性能差且难读）；② 可预期的业务分支（用返回值/Result 更合适）；③ 只为了打日志而 catch 再抛出。异常应该用于"真正的异常情况"。</p></details>
+
+  <div class="card tip" style="margin-top:28px">
+    <h4>D4 完成标准（自我验收）</h4>
+    <ul>
+      <li>能解释类型擦除，并说出至少 3 个由此产生的限制</li>
+      <li>能说出桥接方法存在的理由</li>
+      <li>能用 PECS 解释为什么 <code class="i">? extends</code> 不能写、<code class="i">? super</code> 不能读</li>
+      <li>能默写 Result&lt;T&gt; 的 ok/fail/map 三个方法</li>
+      <li>能画出 Throwable 三层树，并各举 3 个例子</li>
+      <li>能讲清 finally 的三个陷阱（含为什么引用类型"看似"被改）</li>
+      <li>能说清 suppressed 异常解决的是什么问题</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">全中 → 进 D5（反射、注解与代理）。<b>擦除和 finally 这两个必须讲顺</b>，它们会反复出现在后面的框架源码题里。</p>
+  </div>
+</section>
+
+<footer>W05 · D4 · 泛型与异常　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+
+  function render() {
+    items.forEach(el => {
+      const s = +el.dataset.step;
+      el.classList.toggle('on', s <= cur);
+    });
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+    btnPlay.textContent = '▶ 播放';
+  }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => {
+      if (cur >= max) { stop(); return; }
+      go(cur + 1);
+    }, 1500);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W05 · D6 · Maven 与单元测试</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --blue:#60a5fa; --blue2:#93c5fd; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa; --rose:#fb7185; --java:#ffb454;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(96,165,250,.11),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(34,211,238,.08),transparent 62%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--blue);color:#03101f}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));box-shadow:0 0 14px rgba(96,165,250,.7)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--blue);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--blue);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--blue)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--blue);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(96,165,250,.13);
+  color:var(--blue2);padding:1px 6px;border-radius:5px;border:1px solid rgba(96,165,250,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--blue),#bfdbfe 45%,var(--cyan));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--blue);font-weight:700}
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* pipeline */
+.pipe{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:10px 0}
+.pn{flex:1 1 0;min-width:96px;text-align:center;border:1px solid var(--line);border-radius:10px;
+  padding:11px 6px;background:var(--panel2);opacity:.25;transform:translateY(5px);transition:.5s}
+.pn.on{opacity:1;transform:none;border-color:var(--line2)}
+.pn.now{border-color:var(--blue);box-shadow:0 0 22px rgba(96,165,250,.28)}
+.pn .ic{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:.08em}
+.pn .nm{font-size:12px;margin-top:3px;font-weight:600}
+.pn .ds{font-size:10px;color:var(--faint);margin-top:2px}
+.pa{color:var(--faint);padding:0 6px;font-size:12px}
+
+/* dep tree */
+.dep{font-family:var(--mono);font-size:12.5px;line-height:2;margin:14px 0}
+.dep .l1{color:var(--text)}
+.dep .l2{color:var(--muted);margin-left:26px}
+.dep .l3{color:var(--faint);margin-left:56px}
+.dep .win{color:var(--green)}
+.dep .lose{color:var(--rose);text-decoration:line-through;opacity:.7}
+
+/* layers */
+.pyr{display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px 0}
+.pyr .p{border:1px solid var(--line2);border-radius:10px;padding:10px 16px;background:var(--panel2);
+  font-size:13px;text-align:center;transition:.3s}
+.pyr .p small{display:block;color:var(--faint);font-size:10.5px;margin-top:2px}
+.pyr .p.w1{width:38%;border-color:rgba(34,211,238,.45)}
+.pyr .p.w2{width:62%;border-color:rgba(96,165,250,.45)}
+.pyr .p.w3{width:86%;border-color:rgba(167,139,250,.4)}
+.pyr .p.on{box-shadow:0 0 24px rgba(96,165,250,.22)}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--blue2)}
+.ok{color:var(--green)}.no{color:var(--rose)}.mid{color:var(--java)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(96,165,250,.38);background:rgba(96,165,250,.06)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--blue);color:var(--blue);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--blue2);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:88px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}.pyr .p{width:100%}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav>
+  <span class="brand">W05 · D6</span>
+  <a href="#s1">坐标与仓库</a>
+  <a href="#s2">依赖冲突</a>
+  <a href="#s3">作用域</a>
+  <a href="#s4">生命周期</a>
+  <a href="#s5">多模块</a>
+  <a href="#s6">JUnit 5</a>
+  <a href="#s7">Mockito</a>
+  <a href="#s8">测试分层</a>
+  <a href="#s9">自测</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 05 · DAY 06 · 12.13</p>
+  <h1>Maven 与<em>单元测试</em></h1>
+  <p class="lead">今天不是"学会写 pom"，而是学会<b>排查依赖地狱</b>，以及写出<b>不会天天误报</b>的测试。这两件事在团队里直接决定你的可信度。</p>
+  <div class="meta">
+    <span class="pill">任务 <b>3 / 3</b> · 工程与质量</span>
+    <span class="pill">预计 <b>2.5 h</b></span>
+    <span class="pill">产出：<b>多模块 + 单测</b></span>
+  </div>
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>依赖传递、作用域、生命周期、JUnit 5、Mockito、测试分层</span></div>
+    <div class="kv"><b>02</b><span>搭建多模块 Maven 项目，为订单服务补单测与 Mock 测试</span></div>
+    <div class="kv"><b>03</b><span>解释依赖冲突排查与单测边界</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / COORDINATE</p>
+  <h2>坐标与仓库：<em>Maven 的地基</em></h2>
+  <p class="lead">Maven 用三元组定位一切：<code class="i">groupId : artifactId : version</code>。你写下的每个依赖，都是按这个地址去仓库里取。</p>
+
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h4>坐标三要素</h4>
+      <div class="kv"><b>groupId</b><span>组织名，反写域名：<code class="i">org.springframework</code></span></div>
+      <div class="kv"><b>artifactId</b><span>项目名：<code class="i">spring-core</code></span></div>
+      <div class="kv"><b>version</b><span>版本：<code class="i">6.1.0</code></span></div>
+      <div class="kv"><b>packaging</b><span>jar / war / pom（默认 jar）</span></div>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>三类仓库</h4>
+      <div class="kv"><b>本地</b><span><code class="i">~/.m2/repository</code>，先查这里</span></div>
+      <div class="kv"><b>远程</b><span>中央仓库 / 私服（Nexus、Artifactory）</span></div>
+      <div class="kv"><b>查找顺序</b><span>本地 → 私服 → 中央，找到就缓存到本地</span></div>
+    </div>
+  </div>
+
+  <pre><span class="c">&lt;!-- 用私服加速并缓存，企业内网标准配置 --&gt;</span>
+&lt;mirror&gt;
+  &lt;id&gt;nexus&lt;/id&gt;
+  &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
+  &lt;url&gt;https://nexus.company.com/repository/maven-public/&lt;/url&gt;
+&lt;/mirror&gt;</pre>
+  <p class="anno">国内常见问题：中央仓库慢 → 配阿里云镜像；公司内网 → 配私服，注意 <code class="i">mirrorOf</code> 别把私服本身也镜像了。</p>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / CONFLICT</p>
+  <h2>依赖冲突：<em>谁赢谁输</em></h2>
+  <p class="lead">A 依赖 C-1.0，B 依赖 C-2.0，项目同时引入 A 和 B——最后用哪个版本？Maven 有两条例外规则决定。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 冲突现场</b>　两条路径都通向 C，但版本不同。</p>
+        <div class="dep">
+          <div class="l1">order-service</div>
+          <div class="l2">├─ A : 1.0</div>
+          <div class="l3">│　└─ C : 1.0</div>
+          <div class="l2">└─ B : 1.0</div>
+          <div class="l3">　 └─ C : 2.5</div>
+        </div>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 规则一：最短路径优先</b>　距离项目最近的胜出。</p>
+        <div class="dep">
+          <div class="l1">order-service</div>
+          <div class="l2">├─ A : 1.0</div>
+          <div class="l3">│　└─ <span class="win">C : 1.0</span>  ← 深度 2，胜出</div>
+          <div class="l2">└─ B : 1.0</div>
+          <div class="l3">　 └─ <span class="lose">C : 2.5</span>  深度 2，但先声明</div>
+        </div>
+        <p class="anno">深度不同时，浅的赢。比如直接依赖 C-3.0（深度 1）会赢过任何传递依赖。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 规则二：同深度时，先声明优先</b>　pom 里写在前面的人赢。</p>
+        <pre style="margin:0"><span class="c">&lt;!-- 谁写在前面，就用谁带进来的 C --&gt;</span>&lt;dependency&gt;&lt;artifactId&gt;A&lt;/artifactId&gt;&lt;/dependency&gt;
+&lt;dependency&gt;&lt;artifactId&gt;B&lt;/artifactId&gt;&lt;/dependency&gt;</pre>
+        <p class="anno">这条规则很脆弱——调整一下顺序行为就变了，所以真实项目从不依赖它。</p>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 正解：用 dependencyManagement 显式锁定</b></p>
+        <pre style="margin:0"><span class="c">&lt;!-- 父 pom：只声明版本，不引入依赖 --&gt;</span>
+&lt;dependencyManagement&gt;
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+      &lt;artifactId&gt;fastjson2&lt;/artifactId&gt;
+      &lt;version&gt;2.0.43&lt;/version&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+<span class="c">&lt;!-- 子模块：不写 version，继承父的 --&gt;</span>
+&lt;dependency&gt;
+  &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+  &lt;artifactId&gt;fastjson2&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre>
+        <p style="margin-top:10px;color:var(--blue2)"><b>这是唯一可靠的版本治理手段</b>，Spring Boot 的 parent 就是这么做的（BOM）。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <h3>排查冲突的三个命令</h3>
+  <pre>mvn dependency:tree                                  <span class="c">// 看完整依赖树</span>
+mvn dependency:tree -Dincludes=com.alibaba:fastjson2 <span class="c">// 只看某个包从哪来</span>
+mvn dependency:analyze                               <span class="c">// 找出"声明了但没用"和"用了但没声明"</span></pre>
+
+  <div class="card warn">
+    <h4>典型症状：NoSuchMethodError / NoClassDefFoundError</h4>
+    <p>运行时突然报某个类找不到方法，八成是<b>低版本覆盖了高版本</b>（Maven 按最短路径选了旧版）。<br>
+    排查步骤：① <code class="i">dependency:tree</code> 确认实际版本；② 找到引入旧版的依赖，加 <code class="i">&lt;exclusions&gt;</code> 排除；③ 或在 <code class="i">dependencyManagement</code> 里强制指定版本。</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / SCOPE</p>
+  <h2>六种作用域：<em>决定打包与可见性</em></h2>
+  <p class="lead">作用域控制两件事：<b>这个依赖在哪些阶段可用</b>、<b>会不会打进最终包</b>。搞错会直接导致"本地能跑、上线就崩"。</p>
+
+  <table>
+    <tr><th>scope</th><th>编译</th><th>测试</th><th>运行</th><th>打进包</th><th>典型用途</th></tr>
+    <tr><td><code>compile</code>（默认）</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>Spring、Jackson 等核心依赖</td></tr>
+    <tr><td><code>provided</code></td><td class="ok">✓</td><td class="ok">✓</td><td class="no">✗</td><td class="no">✗</td><td>Servlet API、Lombok（容器/编译期提供）</td></tr>
+    <tr><td><code>runtime</code></td><td class="no">✗</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>JDBC 驱动、日志实现</td></tr>
+    <tr><td><code>test</code></td><td class="no">✗</td><td class="ok">✓</td><td class="no">✗</td><td class="no">✗</td><td>JUnit、Mockito</td></tr>
+    <tr><td><code>system</code></td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="no">✗</td><td>本地 jar 路径（不推荐）</td></tr>
+    <tr><td><code>import</code></td><td colspan="4">只用于 <code>dependencyManagement</code> 中导入 BOM</td><td>Spring Boot BOM</td></tr>
+  </table>
+
+  <div class="card warn">
+    <h4>两个高频事故</h4>
+    <div class="kv"><b>provided 打成 jar</b><span>Servlet API 用了 provided 就对了；如果写成 compile，会和 Tomcat 自带的冲突</span></div>
+    <div class="kv"><b>test 依赖泄漏</b><span>JUnit 写成了 compile，被打进生产包，可能拖入一堆传递依赖</span></div>
+  </div>
+
+  <h3>典型 pom 结构</h3>
+  <pre>&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+  &lt;/dependency&gt;
+
+  &lt;dependency&gt;
+    &lt;groupId&gt;jakarta.servlet&lt;/groupId&gt;
+    &lt;artifactId&gt;jakarta.servlet-api&lt;/artifactId&gt;
+    &lt;scope&gt;provided&lt;/scope&gt;          <span class="c">&lt;!-- 容器提供 --&gt;</span>
+  &lt;/dependency&gt;
+
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+    &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+    &lt;scope&gt;test&lt;/scope&gt;              <span class="c">&lt;!-- 只在测试期 --&gt;</span>
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;</pre>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / LIFECYCLE</p>
+  <h2>生命周期：<em>三套阶段</em></h2>
+  <p class="lead">Maven 有三条独立的生命周期：<b>clean</b>、<b>default</b>、<b>site</b>。执行某个阶段时，它前面的所有阶段都会自动执行。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div class="pipe">
+        <div class="pn" data-step="1"><div class="ic">CLEAN</div><div class="nm">clean</div><div class="ds">删 target</div></div>
+        <div class="pa">→</div>
+        <div class="pn" data-step="2"><div class="ic">VALIDATE</div><div class="nm">validate</div><div class="ds">校验工程</div></div>
+        <div class="pa">→</div>
+        <div class="pn" data-step="3"><div class="ic">COMPILE</div><div class="nm">compile</div><div class="ds">编主代码</div></div>
+        <div class="pa">→</div>
+        <div class="pn" data-step="4"><div class="ic">TEST</div><div class="nm">test</div><div class="ds">跑单测</div></div>
+        <div class="pa">→</div>
+        <div class="pn" data-step="5"><div class="ic">PACKAGE</div><div class="nm">package</div><div class="ds">打 jar</div></div>
+        <div class="pa">→</div>
+        <div class="pn" data-step="6"><div class="ic">INSTALL</div><div class="nm">install</div><div class="ds">装本地库</div></div>
+        <div class="pa">→</div>
+        <div class="pn" data-step="7"><div class="ic">DEPLOY</div><div class="nm">deploy</div><div class="ds">推私服</div></div>
+      </div>
+      <p class="anno" style="margin-top:12px">执行 <code class="i">mvn install</code> 时，validate→compile→test→package→install 全部会跑一遍。</p>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 7</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>插件是怎么挂上去的</h4>
+    <p>生命周期本身只是"阶段名"，真正干活的是<b>插件目标</b>，通过 <code class="i">&lt;executions&gt;</code> 绑定到某个阶段。</p>
+    <pre style="margin:8px 0 0">&lt;plugin&gt;
+  &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+  &lt;configuration&gt;&lt;release&gt;17&lt;/release&gt;&lt;/configuration&gt;
+&lt;/plugin&gt;
+&lt;plugin&gt;
+  &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;   <span class="c">&lt;!-- 跑测试的插件 --&gt;</span>
+  &lt;configuration&gt;
+    &lt;skipTests&gt;false&lt;/skipTests&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</pre>
+  </div>
+
+  <div class="card tip">
+    <h4>三个常用跳过参数，别搞混</h4>
+    <div class="kv"><b>-DskipTests</b><span>跳过执行，但<b>仍然编译</b>测试代码（常用）</span></div>
+    <div class="kv"><b>-Dmaven.test.skip</b><span>完全不编译也不执行（更快）</span></div>
+    <div class="kv"><b>-o</b><span>离线模式，只用本地仓库</span></div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / MULTI-MODULE</p>
+  <h2>多模块：<em>继承与聚合</em></h2>
+  <p class="lead">两个概念经常被混为一谈：<b>继承</b>是子模块拿到父的配置，<b>聚合</b>是父模块能一键构建所有子模块。</p>
+
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h4>聚合（父 pom）</h4>
+      <pre style="margin:8px 0 0">&lt;packaging&gt;pom&lt;/packaging&gt;
+&lt;modules&gt;
+  &lt;module&gt;order-domain&lt;/module&gt;
+  &lt;module&gt;order-service&lt;/module&gt;
+  &lt;module&gt;order-web&lt;/module&gt;
+&lt;/modules&gt;</pre>
+      <p class="anno">在父目录执行 <code class="i">mvn install</code>，会按依赖顺序构建所有模块。</p>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>继承（子 pom）</h4>
+      <pre style="margin:8px 0 0">&lt;parent&gt;
+  &lt;groupId&gt;com.demo&lt;/groupId&gt;
+  &lt;artifactId&gt;order-parent&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/parent&gt;</pre>
+      <p class="anno">子模块不需要重复写 groupId/version，也继承 dependencyManagement。</p>
+    </div>
+  </div>
+
+  <h3>一个合理的分层</h3>
+  <pre>order-parent          <span class="c">&lt;!-- 统一版本、插件、编码 --&gt;</span>
+├── order-domain      <span class="c">&lt;!-- 实体、值对象、领域异常，不依赖 Spring --&gt;</span>
+├── order-service     <span class="c">&lt;!-- 业务逻辑，依赖 domain --&gt;</span>
+├── order-web         <span class="c">&lt;!-- Controller、启动类，依赖 service --&gt;</span>
+└── order-infra       <span class="c">&lt;!-- 数据库、MQ 实现 --&gt;</span></pre>
+  <p class="anno">依赖方向必须单向：<b>web → service → domain</b>。domain 不能反过来依赖 service，这是整洁架构的底线。</p>
+
+  <div class="card warn">
+    <h4>多模块最常见的报错</h4>
+    <p><code class="i">Could not find artifact com.demo:order-domain:1.0.0</code><br>
+    原因：子模块之间互相依赖时，被依赖的模块还没 <code class="i">install</code> 到本地仓库。<br>
+    解决：在<b>父目录</b>执行 <code class="i">mvn install</code>（而不是在子模块里 <code class="i">mvn compile</code>），保证构建顺序正确。</p>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / JUNIT</p>
+  <h2>JUnit 5：<em>结构变了</em></h2>
+  <p class="lead">JUnit 5 和 4 完全是两套东西：注解包名变了、断言支持 Lambda、还多了参数化测试。别混用。</p>
+
+  <div class="codecmp" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0">
+    <div class="card" style="margin:0">
+      <h4>JUnit 4</h4>
+      <pre style="margin:8px 0 0"><span class="k">@Test</span>(expected = <span class="t">Exception</span>.<span class="k">class</span>)
+<span class="k">@Before</span> / <span class="k">@After</span>
+<span class="k">@BeforeClass</span> / <span class="k">@AfterClass</span>
+<span class="k">@RunWith</span>(<span class="t">SpringRunner</span>.<span class="k">class</span>)</pre>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>JUnit 5</h4>
+      <pre style="margin:8px 0 0"><span class="k">@Test</span> + <span class="t">assertThrows</span>(...)
+<span class="k">@BeforeEach</span> / <span class="k">@AfterEach</span>
+<span class="k">@BeforeAll</span> / <span class="k">@AfterAll</span>
+<span class="k">@ExtendWith</span>(<span class="t">SpringExtension</span>.<span class="k">class</span>)</pre>
+    </div>
+  </div>
+
+  <h3>一个完整的测试类</h3>
+  <pre><span class="k">class</span> <span class="t">OrderServiceTest</span> {
+
+    <span class="k">private</span> <span class="t">OrderRepository</span> repo;
+    <span class="k">private</span> <span class="t">OrderService</span> service;
+
+    <span class="k">@BeforeEach</span>                     <span class="c">// 每个测试方法前执行，保证隔离</span>
+    <span class="k">void</span> <span class="m">setUp</span>() {
+        repo = <span class="t">Mockito</span>.mock(<span class="t">OrderRepository</span>.<span class="k">class</span>);
+        service = <span class="k">new</span> <span class="t">OrderService</span>(repo);
+    }
+
+    <span class="k">@Test</span>
+    <span class="k">@DisplayName</span>(<span class="s">"库存不足时应抛出业务异常"</span>)
+    <span class="k">void</span> <span class="m">shouldThrowWhenStockNotEnough</span>() {
+        <span class="t">Mockito</span>.when(repo.stockOf(<span class="s">"SKU1"</span>)).thenReturn(<span class="n">0</span>);
+
+        <span class="t">BizException</span> ex = assertThrows(<span class="t">BizException</span>.<span class="k">class</span>,
+                () -&gt; service.create(<span class="s">"SKU1"</span>, <span class="n">2</span>));
+        assertEquals(<span class="t">ErrorCode</span>.STOCK_NOT_ENOUGH, ex.getErrorCode());
+    }
+
+    <span class="k">@ParameterizedTest</span>            <span class="c">// 参数化：一个方法测多组数据</span>
+    <span class="k">@CsvSource</span>({<span class="s">"0,false"</span>, <span class="s">"1,true"</span>, <span class="s">"99,true"</span>})
+    <span class="k">void</span> <span class="m">testPayable</span>(<span class="k">int</span> qty, <span class="k">boolean</span> expected) {
+        assertEquals(expected, qty &gt; <span class="n">0</span>);
+    }
+}</pre>
+
+  <div class="card">
+    <h4>断言的三条实践</h4>
+    <div class="kv"><b>带消息</b><span><code class="i">assertEquals(expect, actual, "创建订单后状态应为 CREATED")</code>，失败时省一半排查时间</span></div>
+    <div class="kv"><b>断言异常</b><span>别用 try-catch 吞，用 <code class="i">assertThrows</code> 并检查异常类型和消息</span></div>
+    <div class="kv"><b>一个测试一个主题</b><span>一个方法里断言 10 件事，失败时不知道哪件坏了</span></div>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <p class="kicker">07 / MOCKITO</p>
+  <h2>Mockito：<em>隔离外部依赖</em></h2>
+  <p class="lead">单元测试的核心要求是<b>只测一个类</b>。数据库、HTTP、MQ 全部 fake 掉，否则测试会慢、会不稳定、会互相影响。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 造一个假依赖</b></p>
+        <pre style="margin:0"><span class="t">OrderRepository</span> repo = Mockito.mock(<span class="t">OrderRepository</span>.<span class="k">class</span>);
+<span class="c">// 此时 repo 的所有方法都返回默认值（null / 0 / false）</span></pre>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 打桩：指定输入对应的输出</b></p>
+        <pre style="margin:0"><span class="t">Mockito</span>.when(repo.stockOf(<span class="s">"SKU1"</span>)).thenReturn(<span class="n">0</span>);
+<span class="t">Mockito</span>.when(repo.save(<span class="t">Mockito</span>.any())).thenAnswer(inv -&gt; inv.getArgument(<span class="n">0</span>));</pre>
+        <p class="anno"><code class="i">any()</code> 是参数匹配器；一旦用了匹配器，<b>所有参数都得用匹配器</b>。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 执行被测方法</b></p>
+        <pre style="margin:0"><span class="k">try</span> {
+    service.create(<span class="s">"SKU1"</span>, <span class="n">2</span>);
+} <span class="k">catch</span> (<span class="t">BizException</span> e) {
+    assertEquals(<span class="t">ErrorCode</span>.STOCK_NOT_ENOUGH, e.getErrorCode());
+}</pre>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 验证交互，而不只是结果</b></p>
+        <pre style="margin:0"><span class="t">Mockito</span>.verify(repo, Mockito.never()).save(<span class="t">Mockito</span>.any());
+<span class="t">ArgumentCaptor</span>&lt;<span class="t">Order</span>&gt; captor = <span class="t">ArgumentCaptor</span>.forClass(<span class="t">Order</span>.<span class="k">class</span>);
+<span class="t">Mockito</span>.verify(repo).save(captor.capture());
+assertEquals(<span class="k">new</span> <span class="t">BigDecimal</span>(<span class="s">"198.00"</span>), captor.getValue().getTotal());</pre>
+        <p class="anno"><code class="i">verify(never())</code> 断言"没被调用"，这在测校验逻辑时特别有用。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>Mockito 的四个限制</h4>
+    <div class="kv"><b>final 类/方法</b><span>老版本不能 mock，需要 mockito-inline（现在已内置 inline mock maker）</span></div>
+    <div class="kv"><b>static 方法</b><span>需要 <code class="i">mockStatic</code>（Spring Boot 3.4 起不再推荐，尽量重构）</span></div>
+    <div class="kv"><b>private 方法</b><span>不能 mock。这是设计味道，说明该方法该抽出去</span></div>
+    <div class="kv"><b>构造器</b><span>不能 mock new，需要工厂或依赖注入</span></div>
+  </div>
+
+  <p>另一条路是 <b>spy</b>：对真实对象打桩，未打桩的方法走真实实现。<code class="i">Mockito.spy(realObj)</code>。它常被滥用，因为"只测一半"往往意味着设计有问题。</p>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <p class="kicker">08 / LAYERS</p>
+  <h2>测试金字塔：<em>别写反了</em></h2>
+  <p class="lead">测试不是越多越好，而是<b>比例要对</b>。倒金字塔（一堆端到端测试）是团队效率的头号杀手。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 单元测试（70%）</b>　测单个类，外部依赖全 mock，毫秒级。</p>
+        <div class="pyr">
+          <div class="p w1 on">单元测试<small>快、稳、定位准 · 占大头</small></div>
+          <div class="p w2">集成测试<small>真连数据库/容器</small></div>
+          <div class="p w3">端到端测试<small>起服务、走 HTTP</small></div>
+        </div>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 集成测试（20%）</b>　验证"SQL 写对了没""序列化对不对"，需要真实中间件。</p>
+        <p class="anno">用 Testcontainers 起一个真实的 MySQL/Redis 容器，比 H2 内存库更接近生产（H2 的 SQL 方言和 MySQL 有差异，容易假绿）。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 端到端（10%）</b>　只覆盖最关键的几条主流程，如"下单→支付→完成"。</p>
+        <div class="pyr">
+          <div class="p w1">单元测试</div>
+          <div class="p w2">集成测试</div>
+          <div class="p w3 on">端到端测试<small>慢、脆、但最接近用户</small></div>
+        </div>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 反模式：冰淇淋筒</b></p>
+        <p>大量手工测试 + 大量端到端，单元测试几乎没有。结果是：<b>跑一次要半小时、挂了不知道哪坏、改一行代码要修十个测试</b>，最后没人愿意跑。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <h3>单测的边界：测什么、不测什么</h3>
+  <table>
+    <tr><th>该测</th><th>不该测</th></tr>
+    <tr><td>业务规则（库存判断、金额计算、状态流转）</td><td>getter / setter</td></tr>
+    <tr><td>边界条件（0、负数、null、超限）</td><td>纯框架代码（Spring 自己）</td></tr>
+    <tr><td>异常分支（该抛的有没有抛）</td><td>私有方法（通过公开方法间接覆盖）</td></tr>
+    <tr><td>并发/幂等关键点（必要时）</td><td>实现细节（内部调了哪个方法）</td></tr>
+  </table>
+
+  <div class="card tip">
+    <h4>判断标准</h4>
+    <p>问一句：<b>"如果我重构这个方法内部实现（行为不变），这个测试会不会挂？"</b><br>
+    会 → 你测的是实现而不是行为，该改。测试应该保护<b>行为契约</b>，而不是锁死实现。</p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <p class="kicker">09 / SELF CHECK</p>
+  <h2>今天的<em>自测</em></h2>
+
+  <details><summary>Maven 依赖冲突的两条调解规则？</summary>
+    <p>① 最短路径优先（离项目更近的胜出）；② 路径长度相同时，pom 中先声明的胜出。可靠做法是用 dependencyManagement 显式锁定版本。</p></details>
+
+  <details><summary>dependencyManagement 和 dependencies 的区别？</summary>
+    <p><code class="i">dependencies</code> 是真正引入依赖；<code class="i">dependencyManagement</code> 只声明版本（不引入），子模块引用时不写 version 就继承这里的版本。Spring Boot 的 parent 就是通过它统一管理版本（BOM）。</p></details>
+
+  <details><summary>compile、provided、runtime、test 的区别？</summary>
+    <p>compile：全程可用且打包；provided：编译和测试可用，运行时由容器提供、不打包（Servlet API）；runtime：编译不可用、运行和打包可用（JDBC 驱动）；test：仅测试阶段可用（JUnit）。</p></details>
+
+  <details><summary>mvn package 和 mvn install 的区别？</summary>
+    <p>package 只打 jar 到 target；install 会先执行 package，再把 jar 安装到本地仓库 ~/.m2，供其他模块依赖。多模块项目必须在父目录执行 install。</p></details>
+
+  <details><summary>-DskipTests 和 -Dmaven.test.skip 的区别？</summary>
+    <p>skipTests 跳过测试执行但仍编译测试代码；maven.test.skip 完全不编译也不执行，更快。CI 上想省时间用后者。</p></details>
+
+  <details><summary>多模块里父子 pom 的"继承"和"聚合"分别是什么？</summary>
+    <p>聚合：父 pom 用 &lt;modules&gt; 列出子模块，能一键构建全部；继承：子 pom 用 &lt;parent&gt; 复用父的配置（版本、插件、依赖管理）。两者常同时使用但概念不同。</p></details>
+
+  <details><summary>JUnit 5 相对 JUnit 4 的主要变化？</summary>
+    <p>包名从 org.junit 改为 org.junit.jupiter；@Before/@After 改为 @BeforeEach/@AfterEach；@BeforeClass 改为 @BeforeAll；断言异常用 assertThrows 替代 expected 属性；新增参数化测试 @ParameterizedTest；扩展机制用 @ExtendWith 替代 @RunWith。</p></details>
+
+  <details><summary>什么时候该用 mock，什么时候不该？</summary>
+    <p>该用：外部不可控依赖（数据库、HTTP、MQ、时间、随机数）。不该用：被测类自身、值对象、简单的 POJO。过度 mock 会导致测试只验证"调用顺序"，重构即挂。</p></details>
+
+  <details><summary>Mockito 里 mock 和 spy 的区别？</summary>
+    <p>mock 创建完全假的替身，所有方法返回默认值；spy 包装真实对象，未打桩的方法走真实实现，打桩的用指定返回值。spy 常用于测试遗留代码，但容易掩盖设计问题。</p></details>
+
+  <details><summary>为什么说测试金字塔不能倒过来？</summary>
+    <p>端到端测试慢、脆弱、失败定位难。如果大部分逻辑只靠 E2E 覆盖，反馈周期会从秒级变成分钟级，且一次失败无法定位到具体类。应让单元测试占大头，E2E 只覆盖关键主流程。</p></details>
+
+  <details><summary>如何判断一个单测写得对不对？</summary>
+    <p>关键问题："重构内部实现（行为不变）时它会挂吗？"挂了说明测的是实现细节。好的测试只依赖公开 API 和可观察行为，失败信息能直接指出哪里不符合预期。</p></details>
+
+  <div class="card tip" style="margin-top:28px">
+    <h4>D6 完成标准（自我验收）</h4>
+    <ul>
+      <li>能说清两条依赖调解规则，并知道为什么真实项目要靠 dependencyManagement</li>
+      <li>能解释四种常用 scope 的差异，知道 provided 用错会怎样</li>
+      <li>能说出 mvn install 会依次执行哪些阶段</li>
+      <li>能搭一个三模块项目（domain / service / web）并正确构建</li>
+      <li>能写一个含 Mockito 打桩 + verify + assertThrows 的测试</li>
+      <li>能说清测试金字塔的构成和"不该测什么"</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">全中 → 进 D7（周复盘 + 订单 CLI 项目）。</p>
+  </div>
+</section>
+
+<footer>W05 · D6 · Maven 与单元测试　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+  const isPipe = items.every(el => el.classList.contains('pn'));
+  function render() {
+    items.forEach(el => el.classList.toggle('on', +el.dataset.step <= cur));
+    if (isPipe) items.forEach(el => el.classList.toggle('now', +el.dataset.step === cur));
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } btnPlay.textContent = '▶ 播放'; }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => { if (cur >= max) { stop(); return; } go(cur + 1); }, 1400);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>

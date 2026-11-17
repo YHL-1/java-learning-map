@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W05 · D5 · 反射、注解与代理</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --rose:#fb7185; --rose2:#fda4af; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa; --java:#ffb454;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(251,113,133,.10),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(251,113,133,.07),transparent 62%),
+    radial-gradient(ellipse 50% 35% at 50% 105%,rgba(34,211,238,.06),transparent 60%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--rose);color:#1a0409}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--rose),var(--violet));box-shadow:0 0 14px rgba(251,113,133,.7)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--rose);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--rose);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--rose)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--rose);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(251,113,133,.13);
+  color:var(--rose2);padding:1px 6px;border-radius:5px;border:1px solid rgba(251,113,133,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--rose),var(--rose2) 45%,var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--rose);font-weight:700}
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* call chain */
+.chain{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+.cbox{border:1px solid var(--line2);border-radius:10px;padding:10px 14px;background:var(--panel2);
+  font-family:var(--mono);font-size:12px;transition:.35s;text-align:center;line-height:1.5}
+.cbox small{display:block;color:var(--faint);font-size:10px;margin-top:3px}
+.cbox.on{border-color:var(--rose);box-shadow:0 0 22px rgba(251,113,133,.25);transform:translateY(-2px)}
+.cbox.g{border-color:var(--green);background:rgba(61,220,151,.12)}
+.cbox.v{border-color:var(--violet);background:rgba(167,139,250,.12)}
+.cbox.dim{opacity:.4}
+.arw{color:var(--faint);font-size:15px}
+
+/* retention */
+.ret{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.rbox{border:1px solid var(--line2);border-radius:12px;padding:14px;background:var(--panel2);transition:.3s}
+.rbox .rh{font-family:var(--mono);font-size:12px;color:var(--cyan);margin-bottom:6px}
+.rbox .rd{font-size:12.5px;color:var(--muted);line-height:1.6}
+.rbox.on{border-color:var(--cyan);box-shadow:0 0 24px rgba(34,211,238,.2)}
+.rbox.dim{opacity:.35}
+
+/* proxy compare */
+.pcmp{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.pcol{border:1px solid var(--line2);border-radius:14px;padding:14px 16px;background:var(--panel2)}
+.pcol .ph{font-family:var(--mono);font-size:12px;margin-bottom:8px}
+.pcol.jdk .ph{color:var(--cyan)}
+.pcol.cg .ph{color:var(--violet)}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--rose2)}
+.ok{color:var(--green)}.no{color:var(--rose)}.mid{color:var(--java)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(251,113,133,.38);background:rgba(251,113,133,.06)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--rose);color:var(--rose);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--rose2);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:88px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){.grid2,.pcmp,.ret{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav>
+  <span class="brand">W05 · D5</span>
+  <a href="#s1">Class 对象</a>
+  <a href="#s2">反射调用</a>
+  <a href="#s3">性能代价</a>
+  <a href="#s4">注解</a>
+  <a href="#s5">字段映射器</a>
+  <a href="#s6">静态 vs 动态代理</a>
+  <a href="#s7">JDK 代理</a>
+  <a href="#s8">CGLIB</a>
+  <a href="#s9">框架中的应用</a>
+  <a href="#s10">自测</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 05 · DAY 05 · 12.12</p>
+  <h1>反射、注解与<em>代理</em></h1>
+  <p class="lead">这三样是"框架三件套"。Spring 的 IoC、AOP、MyBatis 的 Mapper、JUnit 的 <code class="i">@Test</code>，底层全是它们。今天学完，W08 手写 mini-IOC 就只是把零件拼起来。</p>
+  <div class="meta">
+    <span class="pill">任务 <b>2 / 3</b> · 反射与代理</span>
+    <span class="pill">预计 <b>2.5 h</b></span>
+    <span class="pill">产出：<b>字段映射器</b></span>
+  </div>
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>Class 对象、反射调用、注解解析、JDK/CGLIB 动态代理</span></div>
+    <div class="kv"><b>02</b><span>用反射 + 注解实现一个简易字段映射器，为后续 ORM 打底</span></div>
+    <div class="kv"><b>03</b><span>说明反射的性能代价与动态代理在框架中的应用</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / CLASS</p>
+  <h2>Class 对象：<em>类的说明书</em></h2>
+  <p class="lead">JVM 加载一个类时，会在方法区为它生成一份元数据，并在堆里创建一个 <code class="i">Class</code> 对象。反射的本质，就是<b>在运行时读这份说明书并操作它</b>。</p>
+
+  <h3>三种获取方式</h3>
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h4>① 类名.class</h4>
+      <pre style="margin:8px 0 0"><span class="t">Class</span>&lt;<span class="t">Order</span>&gt; c = <span class="t">Order</span>.<span class="k">class</span>;</pre>
+      <p class="anno">编译期确定，不会触发类初始化，最安全最快。</p>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>② 对象.getClass()</h4>
+      <pre style="margin:8px 0 0"><span class="t">Class</span>&lt;?&gt; c = order.getClass();</pre>
+      <p class="anno">已有实例时用，返回的是<b>运行时真实类型</b>（可能是子类）。</p>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>③ Class.forName("全限定名")</h4>
+      <pre style="margin:8px 0 0"><span class="t">Class</span>&lt;?&gt; c = <span class="t">Class</span>.forName(<span class="s">"com.x.Order"</span>);</pre>
+      <p class="anno"><b>会触发类初始化</b>（执行 static 块），这是 JDBC 驱动加载的经典写法。</p>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>④ ClassLoader.loadClass()</h4>
+      <pre style="margin:8px 0 0">cl.loadClass(<span class="s">"com.x.Order"</span>);</pre>
+      <p class="anno">只加载不初始化，延迟到首次使用。</p>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>面试陷阱：<code class="i">Class.forName</code> 和 <code class="i">loadClass</code> 的区别</h4>
+    <p><code class="i">forName</code> 默认 <code class="i">initialize=true</code>，会执行静态代码块；<code class="i">loadClass</code> 只做加载。<br>
+    老 JDBC 代码写 <code class="i">Class.forName("com.mysql.jdbc.Driver")</code> 就是为了触发驱动类静态块里的 <code class="i">DriverManager.registerDriver(...)</code>。JDK 6 之后 SPI 机制接管了这件事，这行可以省略。</p>
+  </div>
+
+  <h3>反射能拿到什么</h3>
+  <pre><span class="t">Class</span>&lt;?&gt; c = <span class="t">Order</span>.<span class="k">class</span>;
+
+c.getSimpleName();          <span class="c">// "Order"</span>
+c.getSuperclass();          <span class="c">// Object.class</span>
+c.getInterfaces();          <span class="c">// 实现的接口</span>
+c.getDeclaredFields();      <span class="c">// 本类所有字段（含 private，不含继承）</span>
+c.getFields();              <span class="c">// 所有 public 字段（含继承）</span>
+c.getDeclaredMethods();     <span class="c">// 本类所有方法（含 private）</span>
+c.getDeclaredConstructors();<span class="c">// 所有构造器</span>
+c.getAnnotations();         <span class="c">// 运行时可见的注解</span>
+c.isInterface(); c.isEnum(); c.isArray();</pre>
+
+  <div class="card tip">
+    <h4>Declared 的区别要记牢</h4>
+    <p><b>带 Declared</b> = 本类声明的（包括 private）<br>
+       <b>不带 Declared</b> = 所有 public 的（包括从父类继承的）<br>
+       想拿父类的 private 字段？只能 <code class="i">c.getSuperclass()</code> 逐层往上找。</p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / INVOKE</p>
+  <h2>反射调用：<em>四步走</em></h2>
+  <p class="lead">反射调用看着神秘，其实就是四步：找到 Class → 找到成员 → 设置可访问 → 调用。把这四步走一遍，Spring 里所有"魔术"都不再神秘。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 拿到 Class 对象</b>　这是所有反射的入口。</p>
+        <div class="chain">
+          <div class="cbox on"><span class="t">Class</span>&lt;Order&gt; c<small>Order.class</small></div>
+        </div>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 找到目标成员</b>　字段、方法、构造器分别有对应的 API。</p>
+        <pre style="margin:0"><span class="t">Field</span> f = c.getDeclaredField(<span class="s">"amount"</span>);
+<span class="t">Method</span> m = c.getDeclaredMethod(<span class="s">"total"</span>);
+<span class="t">Constructor</span>&lt;<span class="t">Order</span>&gt; ctor = c.getDeclaredConstructor(<span class="t">String</span>.<span class="k">class</span>);</pre>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 突破访问控制</b>　private 成员默认不可访问，要 <code class="i">setAccessible(true)</code>。</p>
+        <pre style="margin:0 0 10px">f.setAccessible(<span class="k">true</span>);   <span class="c">// 关闭访问检查（不是改权限，是跳过检查）</span>
+
+<span class="c">// Java 9+ 模块系统下，跨模块反射私有成员可能抛 InaccessibleObjectException</span>
+<span class="c">// 需要目标模块 opens 该包：--add-opens java.base/java.lang=ALL-UNNAMED</span></pre>
+        <p class="anno">这是 JDK 17 之后很多老框架报错的根因。</p>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 调用</b></p>
+        <pre style="margin:0"><span class="t">Order</span> o = ctor.newInstance(<span class="s">"1001"</span>);   <span class="c">// 相当于 new Order("1001")</span>
+f.set(o, <span class="k">new</span> <span class="t">BigDecimal</span>(<span class="s">"99.00"</span>));       <span class="c">// 相当于 o.amount = ...</span>
+<span class="t">Object</span> r = m.invoke(o);                <span class="c">// 相当于 o.total()</span></pre>
+        <div class="chain">
+          <div class="cbox">c.newInstance<small>创建对象</small></div><span class="arw">→</span>
+          <div class="cbox">f.set<small>写字段</small></div><span class="arw">→</span>
+          <div class="cbox g">m.invoke<small>调方法</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>invoke 的返回值与异常</h4>
+    <p>① <code class="i">invoke</code> 返回 <code class="i">Object</code>，基本类型会被<b>装箱</b>，返回 <code class="i">int</code> 的方法拿到的是 <code class="i">Integer</code>。<br>
+    ② 目标方法抛的异常会被包装成 <code class="i">InvocationTargetException</code>，真实异常在 <code class="i">getCause()</code> 里。<b>不拆包的话，你看不到真正的错误</b>。</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / COST</p>
+  <h2>反射为什么<em>慢</em></h2>
+  <p class="lead">"反射慢"是面试高频追问。真正的原因不是"它是反射"，而是这四个具体的机制。说清楚这四点，比背"反射比直接调用慢 10 倍"有价值得多。</p>
+
+  <div class="card">
+    <div class="kv"><b>① 无法内联</b><span>JIT 看不到目标方法，无法做方法内联——而内联是所有 JVM 优化的前提</span></div>
+    <div class="kv"><b>② 参数包装</b><span>调用时要构造 <code class="i">Object[]</code>，基本类型要装箱，返回再拆箱</span></div>
+    <div class="kv"><b>③ 访问检查</b><span>每次调用都要做可见性校验（<code class="i">setAccessible(true)</code> 可以跳过）</span></div>
+    <div class="kv"><b>④ 方法查找</b><span><code class="i">getDeclaredMethod</code> 每次都要遍历方法表匹配签名</span></div>
+  </div>
+
+  <h3>怎么优化</h3>
+  <pre><span class="c">// ❌ 循环里每次都查一遍方法</span>
+<span class="k">for</span> (<span class="t">Order</span> o : list) {
+    <span class="t">Method</span> m = <span class="t">Order</span>.<span class="k">class</span>.getDeclaredMethod(<span class="s">"total"</span>);  <span class="c">// 每次都遍历方法表</span>
+    m.invoke(o);
+}
+
+<span class="c">// ✅ 把 Method 缓存起来（Spring 就是这么干的）</span>
+<span class="k">private static final</span> <span class="t">Method</span> TOTAL = find();
+<span class="k">for</span> (<span class="t">Order</span> o : list) TOTAL.invoke(o);
+
+<span class="c">// ✅ 更彻底：MethodHandle（JIT 可见，接近直接调用）</span>
+<span class="t">MethodHandle</span> mh = MethodHandles.lookup()
+        .findVirtual(<span class="t">Order</span>.<span class="k">class</span>, <span class="s">"total"</span>, MethodType.methodType(<span class="t">BigDecimal</span>.<span class="k">class</span>));
+mh.invokeExact(o);</pre>
+
+  <div class="card tip">
+    <h4>准确的表述</h4>
+    <p>"反射的首次调用很慢（要解析、校验），但把 Method 缓存下来之后，性能差距会缩小到几倍以内；如果换成 MethodHandle 或 LambdaMetafactory，可以接近直接调用。<b>真正不能接受的是把反射放在热点循环里反复查找</b>。"</p>
+  </div>
+
+  <div class="card">
+    <h4>补充：<code class="i">setAccessible(true)</code> 到底做了什么</h4>
+    <p>它不是"提升权限"，而是<b>关闭访问检查</b>（把 <code class="i">override</code> 标志置为 true），让后续调用跳过 <code class="i">Reflection.verifyMemberAccess</code>。所以它不会破坏封装语义，只是省了一次校验。</p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / ANNOTATION</p>
+  <h2>注解：<em>贴在代码上的标签</em></h2>
+  <p class="lead">注解本身不做任何事，它只是元数据。<b>真正让它生效的是"读它的代码"</b>——编译器、注解处理器，或者运行时的反射。</p>
+
+  <h3>四个元注解决定行为</h3>
+  <div class="card">
+    <div class="kv"><b>@Retention</b><span>保留到哪一阶段：SOURCE / CLASS / RUNTIME（只有 RUNTIME 能被反射读到）</span></div>
+    <div class="kv"><b>@Target</b><span>能贴在哪：TYPE / FIELD / METHOD / PARAMETER / CONSTRUCTOR / ANNOTATION_TYPE…</span></div>
+    <div class="kv"><b>@Documented</b><span>是否进入 javadoc</span></div>
+    <div class="kv"><b>@Inherited</b><span>子类是否继承父类上的注解（只对类注解有效）</span></div>
+  </div>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① Retention 三档</b>　选错档位，运行时反射什么都读不到。</p>
+        <div class="ret">
+          <div class="rbox on"><div class="rh">SOURCE</div><div class="rd">只在源码中，编译后丢弃。<br>例：<code class="i">@Override</code>、<code class="i">@SuppressWarnings</code></div></div>
+          <div class="rbox dim"><div class="rh">CLASS</div><div class="rd">保留在 .class 但不加载到 JVM，反射读不到。<br>这是<b>默认值</b></div></div>
+          <div class="rbox dim"><div class="rh">RUNTIME</div><div class="rd">保留到运行期，反射可读。<br>例：<code class="i">@Component</code>、<code class="i">@Test</code></div></div>
+        </div>
+        <p class="anno">注意：<b>不写 @Retention 时默认是 CLASS</b>，这是新手最常踩的坑——注解写了，反射却读不到。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 自己定义一个能被反射读到的注解</b></p>
+        <pre style="margin:0"><span class="k">@Retention</span>(<span class="t">RetentionPolicy</span>.RUNTIME)    <span class="c">// 关键，不写就是 CLASS</span>
+<span class="k">@Target</span>({<span class="t">ElementType</span>.FIELD, <span class="t">ElementType</span>.METHOD})
+<span class="k">public @interface</span> <span class="t">Column</span> {
+    <span class="t">String</span> <span class="m">value</span>();                  <span class="c">// 注解的"属性"其实是方法</span>
+    <span class="t">boolean</span> <span class="m">nullable</span>() <span class="k">default true</span>;  <span class="c">// 可以有默认值</span>
+}</pre>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 使用并读取</b></p>
+        <pre style="margin:0"><span class="k">class</span> <span class="t">Order</span> {
+    <span class="k">@Column</span>(<span class="s">"order_no"</span>) <span class="k">private</span> <span class="t">String</span> orderNo;
+    <span class="k">@Column</span>(value = <span class="s">"amount"</span>, nullable = <span class="k">false</span>) <span class="k">private</span> <span class="t">BigDecimal</span> amount;
+}
+
+<span class="c">// 读取：</span>
+<span class="k">for</span> (<span class="t">Field</span> f : <span class="t">Order</span>.<span class="k">class</span>.getDeclaredFields()) {
+    <span class="t">Column</span> col = f.getAnnotation(<span class="t">Column</span>.<span class="k">class</span>);
+    <span class="k">if</span> (col != <span class="k">null</span>) System.out.println(f.getName() + <span class="s">" → "</span> + col.value());
+}</pre>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 3</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>注解的三种"生效"方式</h4>
+    <div class="kv"><b>编译期</b><span><code class="i">@Override</code> 让编译器检查签名；APT（注解处理器）可以生成代码，如 Lombok、MapStruct</span></div>
+    <div class="kv"><b>字节码增强</b><span>编译后改字节码，如 AspectJ 编译期织入</span></div>
+    <div class="kv"><b>运行期</b><span>通过反射读取，Spring 全家桶都走这条路</span></div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / PRACTICE</p>
+  <h2>任务 2：简易<em>字段映射器</em></h2>
+  <p class="lead">这是 MyBatis / JPA 的核心思路：把数据库列名映射到 Java 字段。写一遍，你就理解了 ORM 为什么能"自动"赋值。</p>
+
+  <pre><span class="c">// ① 注解：声明字段对应的列名</span>
+<span class="k">@Retention</span>(<span class="t">RetentionPolicy</span>.RUNTIME)
+<span class="k">@Target</span>(<span class="t">ElementType</span>.FIELD)
+<span class="k">public @interface</span> <span class="t">Column</span> { <span class="t">String</span> <span class="m">value</span>(); }
+
+<span class="c">// ② 映射器：把 Map&lt;列名, 值&gt; 填充进对象</span>
+<span class="k">public final class</span> <span class="t">RowMapper</span> {
+
+    <span class="k">public static</span> &lt;<span class="t">T</span>&gt; <span class="t">T</span> <span class="m">map</span>(<span class="t">Class</span>&lt;<span class="t">T</span>&gt; type, <span class="t">Map</span>&lt;<span class="t">String</span>, <span class="t">Object</span>&gt; row) {
+        <span class="k">try</span> {
+            <span class="t">T</span> obj = type.getDeclaredConstructor().newInstance();
+            <span class="k">for</span> (<span class="t">Field</span> f : type.getDeclaredFields()) {
+                <span class="t">Column</span> col = f.getAnnotation(<span class="t">Column</span>.<span class="k">class</span>);
+                <span class="k">if</span> (col == <span class="k">null</span>) <span class="k">continue</span>;
+                <span class="t">Object</span> v = row.get(col.value());
+                <span class="k">if</span> (v == <span class="k">null</span>) <span class="k">continue</span>;
+                f.setAccessible(<span class="k">true</span>);
+                f.set(obj, convert(v, f.getType()));   <span class="c">// 类型转换</span>
+            }
+            <span class="k">return</span> obj;
+        } <span class="k">catch</span> (<span class="t">ReflectiveOperationException</span> e) {
+            <span class="k">throw new</span> <span class="t">IllegalStateException</span>(<span class="s">"映射失败: "</span> + type, e);   <span class="c">// 保留 cause</span>
+        }
+    }
+
+    <span class="k">private static</span> <span class="t">Object</span> <span class="m">convert</span>(<span class="t">Object</span> v, <span class="t">Class</span>&lt;?&gt; target) {
+        <span class="k">if</span> (target.isInstance(v)) <span class="k">return</span> v;
+        <span class="k">if</span> (target == <span class="t">BigDecimal</span>.<span class="k">class</span>) <span class="k">return new</span> <span class="t">BigDecimal</span>(v.toString());
+        <span class="k">if</span> (target == <span class="t">Long</span>.<span class="k">class</span>)      <span class="k">return</span> ((<span class="t">Number</span>) v).longValue();
+        <span class="k">if</span> (target == <span class="t">Integer</span>.<span class="k">class</span>)   <span class="k">return</span> ((<span class="t">Number</span>) v).intValue();
+        <span class="k">if</span> (target == <span class="t">String</span>.<span class="k">class</span>)    <span class="k">return</span> v.toString();
+        <span class="k">throw new</span> <span class="t">IllegalArgumentException</span>(<span class="s">"不支持的类型: "</span> + target);
+    }
+}</pre>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 输入：一行数据库记录</b></p>
+        <div class="chain">
+          <div class="cbox">order_no = "A001"</div>
+          <div class="cbox">amount = 99.00</div>
+          <div class="cbox">status = "PAID"</div>
+        </div>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 反射扫描字段，查注解</b></p>
+        <div class="chain">
+          <div class="cbox on">orderNo<small>@Column("order_no")</small></div><span class="arw">→</span>
+          <div class="cbox on">amount<small>@Column("amount")</small></div><span class="arw">→</span>
+          <div class="cbox dim">createTime<small>无注解 → 跳过</small></div>
+        </div>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ setAccessible + 类型转换 + set</b></p>
+        <div class="chain">
+          <div class="cbox">"A001"<small>String → String</small></div><span class="arw">→</span>
+          <div class="cbox g">field.set<small>写入成功</small></div>
+          <div class="cbox dim">99.00 → BigDecimal<small>需转换</small></div>
+        </div>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 得到完整对象</b></p>
+        <pre style="margin:0">Order{ orderNo='A001', amount=99.00, status=PAID, createTime=null }</pre>
+        <p class="anno">MyBatis 的 <code class="i">resultMap</code>、JPA 的 <code class="i">@Column</code>，加上缓存和更完善的类型处理，本质就是这个循环。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / STATIC VS DYNAMIC</p>
+  <h2>静态代理 vs <em>动态代理</em></h2>
+  <p class="lead">代理模式的目的：<b>在不改原类的前提下，给方法加上额外逻辑</b>。静态代理手写，动态代理在运行时生成。</p>
+
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h4>静态代理：一个类对应一个代理</h4>
+      <pre style="margin:8px 0 0"><span class="k">interface</span> <span class="t">OrderService</span> { <span class="k">void</span> <span class="m">create</span>(); }
+
+<span class="k">class</span> <span class="t">OrderServiceImpl</span> <span class="k">implements</span> <span class="t">OrderService</span> {
+    <span class="k">public void</span> <span class="m">create</span>() { <span class="c">/* 业务 */</span> }
+}
+
+<span class="k">class</span> <span class="t">OrderServiceProxy</span> <span class="k">implements</span> <span class="t">OrderService</span> {
+    <span class="k">private final</span> <span class="t">OrderService</span> target;
+    <span class="k">public void</span> <span class="m">create</span>() {
+        log(<span class="s">"before"</span>);
+        target.create();      <span class="c">// 委托</span>
+        log(<span class="s">"after"</span>);
+    }
+}</pre>
+      <p class="anno" style="margin-top:8px">问题：接口有 20 个方法，就要手写 20 次委托——这正是动态代理要解决的。</p>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>动态代理：运行时生成代理类</h4>
+      <pre style="margin:8px 0 0"><span class="t">OrderService</span> proxy = (<span class="t">OrderService</span>) <span class="t">Proxy</span>.newProxyInstance(
+    cl,                                    <span class="c">// 类加载器</span>
+    <span class="k">new</span> <span class="t">Class</span>&lt;?&gt;[]{ <span class="t">OrderService</span>.<span class="k">class</span> },  <span class="c">// 要实现的接口</span>
+    (p, m, args) -&gt; {                      <span class="c">// InvocationHandler</span>
+        log(<span class="s">"before"</span>);
+        <span class="t">Object</span> r = m.invoke(target, args);  <span class="c">// 反射调用真实方法</span>
+        log(<span class="s">"after"</span>);
+        <span class="k">return</span> r;
+    });
+
+<span class="c">// 一个 handler 搞定所有方法，这就是 AOP 的原理</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <p class="kicker">07 / JDK PROXY</p>
+  <h2>JDK 动态代理的<em>调用链</em></h2>
+  <p class="lead">这是今天最该讲透的一张图。面试问"动态代理原理"，答的就是这条链：调用代理对象 → 进入 InvocationHandler → 反射调真实方法。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 生成代理类</b>　<code class="i">Proxy.newProxyInstance</code> 在运行时生成 <code class="i">$Proxy0</code>，它实现了你指定的接口。</p>
+        <div class="chain">
+          <div class="cbox on">$Proxy0<small>运行时生成，实现 OrderService</small></div>
+        </div>
+        <p class="anno">这个类在磁盘上看不到（可以用 <code class="i">-Djdk.proxy.ProxyGenerator.saveGeneratedFiles=true</code> 导出）。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 调用代理对象的方法</b>　用户代码写的是 <code class="i">proxy.create()</code>。</p>
+        <div class="chain">
+          <div class="cbox on">client.create()<small>调用方</small></div><span class="arw">→</span>
+          <div class="cbox">$Proxy0.create()<small>生成的代理方法</small></div>
+        </div>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 代理方法把调用转交给 handler</b></p>
+        <pre style="margin:0 0 10px"><span class="c">// $Proxy0 里生成的方法大致是：</span>
+<span class="k">public final void</span> <span class="m">create</span>() {
+    <span class="k">try</span> { <span class="k">this</span>.h.invoke(<span class="k">this</span>, m3, <span class="k">null</span>); }   <span class="c">// h 就是你传的 InvocationHandler</span>
+    <span class="k">catch</span> (<span class="t">Throwable</span> e) { <span class="k">throw new</span> <span class="t">UndeclaredThrowableException</span>(e); }
+}</pre>
+        <div class="chain">
+          <div class="cbox">$Proxy0.create()</div><span class="arw">→</span>
+          <div class="cbox v">handler.invoke(proxy, method, args)<small>你可以在这里加任何逻辑</small></div>
+        </div>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ handler 内部反射调用真实对象</b></p>
+        <div class="chain">
+          <div class="cbox v">handler.invoke</div><span class="arw">→</span>
+          <div class="cbox g">method.invoke(target, args)<small>反射调真实方法</small></div>
+        </div>
+        <p class="anno">所以动态代理的性能开销 = 一次额外方法调用 + 一次反射调用。这就是为什么 Spring 会缓存 Method。</p>
+      </div>
+      <div data-step="5">
+        <p style="margin-top:0"><b>⑤ 核心限制：只能代理接口</b></p>
+        <p>生成的 <code class="i">$Proxy0</code> 已经 <code class="i">extends Proxy</code>，Java 单继承，所以它只能通过 <code class="i">implements</code> 来"成为"你的类型。<br>
+        <b>如果目标类没有实现接口，JDK 动态代理就无能为力</b> —— 这正是 CGLIB 存在的理由。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 5</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <p class="kicker">08 / CGLIB</p>
+  <h2>CGLIB：<em>生成子类</em>来代理</h2>
+  <p class="lead">思路完全不同：既然不能"实现接口"，那就<b>继承目标类、重写方法</b>，在重写的方法里调父类实现。</p>
+
+  <div class="pcmp">
+    <div class="pcol jdk">
+      <div class="ph">JDK 动态代理</div>
+      <div class="kv"><b>原理</b><span>生成类实现接口</span></div>
+      <div class="kv"><b>前提</b><span>目标<b>必须</b>实现接口</span></div>
+      <div class="kv"><b>局限</b><span>无法代理没有接口的类</span></div>
+      <div class="kv"><b>性能</b><span>生成快，调用稍慢（反射）</span></div>
+      <div class="kv"><b>依赖</b><span>JDK 自带</span></div>
+    </div>
+    <div class="pcol cg">
+      <div class="ph">CGLIB</div>
+      <div class="kv"><b>原理</b><span>生成<b>子类</b>重写方法</span></div>
+      <div class="kv"><b>前提</b><span>类不能是 final</span></div>
+      <div class="kv"><b>局限</b><span>final 类/方法无法代理；private 方法代理不了</span></div>
+      <div class="kv"><b>性能</b><span>生成慢（改字节码），调用快（无反射）</span></div>
+      <div class="kv"><b>依赖</b><span>第三方库（Spring 已内置为 spring-core）</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>Spring AOP 怎么选？</h4>
+    <p>规则很简单：<br>
+      <b>目标类实现了接口</b> → 默认用 JDK 动态代理<br>
+      <b>没有实现接口</b> → 用 CGLIB<br>
+      也可以通过 <code class="i">@EnableAspectJAutoProxy(proxyTargetClass = true)</code> 强制 CGLIB。<br>
+      Spring Boot 2.x 之后<b>默认全局使用 CGLIB</b>（<code class="i">spring.aop.proxy-target-class=true</code>），因为它能代理没有接口的类，且避免了"注入接口却拿到代理对象"的类型困惑。</p>
+  </div>
+
+  <div class="card warn">
+    <h4>三个经典坑</h4>
+    <ul style="margin:0">
+      <li><b>自调用失效</b>：同类内部 <code class="i">this.method()</code> 不走代理，所以 <code class="i">@Transactional</code> 失效。解决：注入自身 / AopContext.currentProxy()。</li>
+      <li><b>final 方法不被代理</b>：CGLIB 无法重写 final 方法，注解加了也没用。</li>
+      <li><b>private 方法不被代理</b>：子类看不到 private，JDK 代理也代理不到接口外的方法。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <p class="kicker">09 / IN FRAMEWORK</p>
+  <h2>它们<em>在框架里</em>的位置</h2>
+  <p class="lead">这四个例子能让你明白：框架不是魔法，只是把反射 + 注解 + 代理组合得很好。</p>
+
+  <table>
+    <tr><th>场景</th><th>用了什么</th><th>做了什么</th></tr>
+    <tr><td>Spring IoC</td><td>反射 + 注解</td><td>扫描 <code>@Component</code>，反射创建实例、注入依赖</td></tr>
+    <tr><td>Spring AOP</td><td>动态代理</td><td>为目标 Bean 生成代理，在方法前后织入切面逻辑</td></tr>
+    <tr><td>MyBatis Mapper</td><td>JDK 动态代理</td><td>Mapper 只有接口没有实现，代理在 <code>invoke</code> 里根据方法名拼 SQL 并执行</td></tr>
+    <tr><td>JUnit</td><td>注解 + 反射</td><td>扫描 <code>@Test</code> 方法，反射调用，捕获异常判定成败</td></tr>
+    <tr><td>Jackson</td><td>反射 + 注解</td><td>读 <code>@JsonProperty</code>，反射读写字段做序列化</td></tr>
+    <tr><td>RPC 框架</td><td>动态代理</td><td>客户端持有接口代理，<code>invoke</code> 里把方法名+参数序列化发到远端</td></tr>
+  </table>
+
+  <div class="card tip">
+    <h4>MyBatis Mapper 的例子值得单独想一下</h4>
+    <pre style="margin:8px 0 0"><span class="k">public interface</span> <span class="t">OrderMapper</span> {
+    <span class="t">Order</span> <span class="m">findById</span>(<span class="k">long</span> id);   <span class="c">// 没有实现类！</span>
+}
+
+<span class="c">// 但你这样用：</span>
+<span class="t">OrderMapper</span> mapper = sqlSession.getMapper(<span class="t">OrderMapper</span>.<span class="k">class</span>);
+<span class="t">Order</span> o = mapper.findById(<span class="n">1</span>);   <span class="c">// 竟然能跑</span></pre>
+    <p style="margin-top:10px">因为返回的是 JDK 动态代理。handler 里拿到 <code class="i">method.getName()</code>，去 XML/注解里找对应的 SQL，执行后用反射把 ResultSet 映射成 Order——正好是今天 D5 全部三样东西的组合。</p>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <p class="kicker">10 / SELF CHECK</p>
+  <h2>今天的<em>自测</em></h2>
+
+  <details><summary>获取 Class 对象的四种方式，区别是什么？</summary>
+    <p>① <code class="i">类名.class</code>：编译期确定，不触发初始化；② <code class="i">obj.getClass()</code>：返回运行时真实类型；③ <code class="i">Class.forName(name)</code>：触发类初始化（执行 static 块）；④ <code class="i">classLoader.loadClass(name)</code>：只加载不初始化。</p></details>
+
+  <details><summary>getFields 和 getDeclaredFields 的区别？</summary>
+    <p><code class="i">getFields</code> 返回所有 public 字段（含继承）；<code class="i">getDeclaredFields</code> 返回本类声明的所有字段（含 private，不含继承）。想拿父类私有字段要沿 getSuperclass 逐层找。</p></details>
+
+  <details><summary>反射为什么慢？怎么优化？</summary>
+    <p>① 无法被 JIT 内联；② 参数要装箱、构造 Object[]；③ 每次调用做访问检查；④ 每次 getDeclaredMethod 要遍历方法表匹配签名。优化：缓存 Method 对象、setAccessible(true) 跳过检查、必要时改用 MethodHandle 或 LambdaMetafactory。</p></details>
+
+  <details><summary>setAccessible(true) 做了什么？</summary>
+    <p>不是提升权限，而是关闭访问检查（把 override 标志置 true），让后续调用跳过 Reflection.verifyMemberAccess 校验。Java 9+ 模块系统下，跨模块反射私有成员可能抛 InaccessibleObjectException，需要 --add-opens。</p></details>
+
+  <details><summary>注解的 @Retention 三档有什么区别？默认是哪档？</summary>
+    <p>SOURCE（编译后丢弃，如 @Override）、CLASS（保留在 class 文件但反射读不到，<b>默认值</b>）、RUNTIME（反射可读，如 @Component、@Test）。写自定义注解想被反射读取，必须显式写 RUNTIME。</p></details>
+
+  <details><summary>注解本身能"执行"逻辑吗？</summary>
+    <p>不能。注解只是元数据，必须由"读取它的代码"来赋予语义：编译器检查（@Override）、注解处理器生成代码（Lombok）、运行时反射读取（Spring）。</p></details>
+
+  <details><summary>静态代理和动态代理的区别？</summary>
+    <p>静态代理在编译期手写代理类，一个实现类对应一个代理，方法多了要重复写委托代码；动态代理在运行期自动生成代理类，用统一的 InvocationHandler 处理所有方法调用，避免重复。</p></details>
+
+  <details><summary>JDK 动态代理的原理？为什么只能代理接口？</summary>
+    <p>Proxy.newProxyInstance 在运行时生成 $Proxy0，它 implements 你指定的接口。调用代理方法时，转发到 InvocationHandler.invoke，再通过 method.invoke 反射调用真实对象。因为 $Proxy0 已经 extends Proxy，Java 单继承，所以只能通过实现接口来"成为"目标类型，无法继承类。</p></details>
+
+  <details><summary>CGLIB 的原理和限制？</summary>
+    <p>通过字节码技术生成目标类的<b>子类</b>，重写非 final 方法，在方法里调用父类实现并织入逻辑。限制：不能代理 final 类、final 方法、private 方法（子类不可见）。</p></details>
+
+  <details><summary>Spring AOP 用哪种代理？</summary>
+    <p>目标类有接口时默认 JDK 代理，无接口时用 CGLIB；Spring Boot 2.x 起默认全部使用 CGLIB（proxyTargetClass=true）。可通过 @EnableAspectJAutoProxy(proxyTargetClass=true) 强制。</p></details>
+
+  <details><summary>为什么 @Transactional 会失效？至少说出三种情况。</summary>
+    <p>① 自调用：同类内部 this.method() 不走代理；② 方法不是 public（Spring AOP 只代理 public）；③ 类是 final 或方法是 final（CGLIB 无法重写）；④ 异常被 catch 吞掉，或抛出的是受检异常但没配 rollbackFor；⑤ 自己 new 出来的对象（不经过容器）。</p></details>
+
+  <details><summary>MyBatis 的 Mapper 接口没有实现类，为什么能调用？</summary>
+    <p>getMapper 返回的是 JDK 动态代理。InvocationHandler 里根据方法名/注解找到对应 SQL，执行后把结果集映射成对象返回。这是"反射 + 注解 + 动态代理"三件套的典型应用。</p></details>
+
+  <div class="card tip" style="margin-top:28px">
+    <h4>D5 完成标准（自我验收）</h4>
+    <ul>
+      <li>能说出获取 Class 的四种方式及 forName 与 loadClass 的区别</li>
+      <li>能讲清反射慢的四个原因，并给出缓存 Method 的优化</li>
+      <li>能写出一个自定义注解 + 反射解析的完整例子</li>
+      <li>能画出 JDK 动态代理的调用链（代理类 → handler → 反射 → 真实对象）</li>
+      <li>能说清 JDK 只能代理接口、CGLIB 只能代理非 final 类的原因</li>
+      <li>能手写 RowMapper 的映射循环</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">全中 → 进 D6（Maven 与单元测试）。<b>动态代理那条链必须能画出来</b>，W09 的 AOP 和 W08 的 mini-IOC 都靠它。</p>
+  </div>
+</section>
+
+<footer>W05 · D5 · 反射、注解与代理　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+  function render() {
+    items.forEach(el => el.classList.toggle('on', +el.dataset.step <= cur));
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } btnPlay.textContent = '▶ 播放'; }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => { if (cur >= max) { stop(); return; } go(cur + 1); }, 1500);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>

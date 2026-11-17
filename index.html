@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Java 后端学习笔记 · 112 天计划</title>
+<meta name="description" content="Java 后端学习笔记：按天拆解的交互式动画讲解，覆盖语言基础、集合、并发、JVM、Spring、数据层与分布式。" />
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.26);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --java:#ffb454; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  min-height:100vh;padding:56px clamp(16px,4vw,56px) 80px;line-height:1.7;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(255,180,84,.11),transparent 60%),
+    radial-gradient(ellipse 46% 44% at 92% 4%,rgba(167,139,250,.10),transparent 62%),
+    radial-gradient(ellipse 50% 36% at 50% 106%,rgba(61,220,151,.07),transparent 60%);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1000px;margin:0 auto}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.2em;
+  color:var(--java);margin:0 0 12px}
+h1{font-size:clamp(28px,4vw,44px);line-height:1.12;letter-spacing:-.035em;margin:0 0 14px}
+h1 em{font-style:normal;background:linear-gradient(100deg,var(--java),#ffe0a8 48%,#fb7185);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--muted);font-size:14.5px;max-width:660px;margin:0 0 26px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 40px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--java);font-weight:700}
+
+h2{font-size:13px;letter-spacing:.16em;font-family:var(--mono);color:var(--faint);
+  font-weight:700;margin:38px 0 14px;text-transform:uppercase}
+
+.week{border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.012))}
+.wk-head{display:flex;gap:16px;align-items:center;padding:20px 22px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line)}
+.wk-badge{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.1em;
+  color:#1a1005;background:linear-gradient(140deg,var(--java),#ffd28a);
+  border-radius:9px;padding:7px 11px}
+.wk-info{flex:1;min-width:200px}
+.wk-info b{font-size:17px;display:block;margin-bottom:3px}
+.wk-info span{font-size:12.5px;color:var(--muted)}
+.wk-prog{font-family:var(--mono);font-size:12px;color:var(--green);
+  border:1px solid rgba(61,220,151,.3);background:rgba(61,220,151,.08);
+  border-radius:99px;padding:4px 11px}
+
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1px;
+  background:var(--line)}
+.day{display:block;text-decoration:none;padding:16px 20px;background:var(--panel);
+  transition:.2s;position:relative}
+.day:hover{background:var(--panel2)}
+.day:hover .dtitle{color:var(--java)}
+.dnum{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--faint)}
+.dtitle{font-size:14.5px;font-weight:600;margin:4px 0 4px;transition:.2s}
+.ddesc{font-size:12px;color:var(--muted);line-height:1.6}
+
+.todo{padding:16px 22px;color:var(--faint);font-size:12.5px;font-family:var(--mono);
+  border-top:1px solid var(--line);text-align:center}
+
+.note{margin-top:40px;border:1px solid rgba(34,211,238,.22);border-radius:16px;
+  padding:18px 22px;background:linear-gradient(160deg,rgba(34,211,238,.06),transparent)}
+.note b{color:var(--cyan)}
+.note p{margin:8px 0 0;font-size:13px;color:var(--text2);line-height:1.8}
+footer{margin-top:44px;text-align:center;color:var(--faint);font-size:11.5px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">JAVA 后端 · 学习笔记</p>
+  <h1>按天拆解的 <em>Java 后端</em>笔记</h1>
+  <p class="lead">每一天一页交互式动画讲解：可单步推演、可播放，覆盖语言基础、集合、并发、JVM、Spring、数据层与分布式。纯静态、离线可用。</p>
+
+  <div class="stats">
+    <span class="pill">已完成 <b>7</b> 天</span>
+    <span class="pill">知识模块 <b>1</b> 个</span>
+    <span class="pill">演示动画 <b>20+</b> 组</span>
+    <span class="pill">零依赖 <b>纯 HTML</b></span>
+  </div>
+
+  <h2>学习路径</h2>
+
+  <div class="week">
+    <div class="wk-head">
+      <span class="wk-badge">WEEK 05</span>
+      <span class="wk-info">
+        <b>Java 基础与面向对象</b>
+        <span>7 天 · 21 个任务 · 约 17.5 小时 · 从语法到 OOP，建立后端语言基本功</span>
+      </span>
+      <span class="wk-prog">7 / 7 完成</span>
+    </div>
+
+    <div class="days">
+      <a class="day" href="w05-d01-java-oop.html">
+        <div class="dnum">DAY 01 · 12.08</div>
+        <div class="dtitle">环境、语法与 OOP</div>
+        <div class="ddesc">JDK/JRE/JVM · 编译链路 · 栈与堆 · 值传递 · 多态原理 · 接口 vs 抽象类</div>
+      </a>
+      <a class="day" href="w05-d02-object-core.html">
+        <div class="dnum">DAY 02 · 12.09</div>
+        <div class="dtitle">Object 与核心类</div>
+        <div class="ddesc">equals/hashCode 契约 · HashMap 查找 · String 常量池 · Integer 缓存 · BigDecimal</div>
+      </a>
+      <a class="day" href="w05-d03-collections.html">
+        <div class="dnum">DAY 03 · 12.10</div>
+        <div class="dtitle">集合框架入门</div>
+        <div class="ddesc">List/Set/Map · ArrayList 扩容 · HashMap 八步 put · fail-fast · 分组与 Top-N</div>
+      </a>
+      <a class="day" href="w05-d04-generics-exceptions.html">
+        <div class="dnum">DAY 04 · 12.11</div>
+        <div class="dtitle">泛型与异常</div>
+        <div class="ddesc">类型擦除 · 桥接方法 · PECS · Result&lt;T&gt; · 异常体系 · finally 陷阱 · 资源关闭</div>
+      </a>
+      <a class="day" href="w05-d05-reflection-proxy.html">
+        <div class="dnum">DAY 05 · 12.12</div>
+        <div class="dtitle">反射、注解与代理</div>
+        <div class="ddesc">Class 对象 · 反射代价 · 自定义注解 · JDK 动态代理 · CGLIB · 字段映射器</div>
+      </a>
+      <a class="day" href="w05-d06-maven-testing.html">
+        <div class="dnum">DAY 06 · 12.13</div>
+        <div class="dtitle">Maven 与单元测试</div>
+        <div class="ddesc">依赖冲突 · 六种 scope · 生命周期 · 多模块 · JUnit 5 · Mockito · 测试金字塔</div>
+      </a>
+      <a class="day" href="w05-d07-review-project.html">
+        <div class="dnum">DAY 07 · 12.14</div>
+        <div class="dtitle">周复盘 · 周项目</div>
+        <div class="ddesc">知识串联 · 12 条自检 · 订单 CLI 需求 · 分层设计 · 15 分钟项目自述</div>
+      </a>
+      <a class="day" href="w05-index.html">
+        <div class="dnum">OVERVIEW</div>
+        <div class="dtitle">本周索引</div>
+        <div class="ddesc">D1–D7 总览与进度，含每日主题速查</div>
+      </a>
+    </div>
+
+    <div class="todo">WEEK 06–11 · 待补充（集合源码 / 并发 / JVM / Spring / 数据层 / 分布式）</div>
+  </div>
+
+  <div class="note">
+    <b>怎么用</b>
+    <p>每个演示区右下角有「上一步 / 下一步 / ▶ 播放 / 重置」。建议先自己推演再点播放对照——看动画容易产生"我懂了"的错觉，能口述才算过。</p>
+    <p>每页最后都有「完成标准」清单，那是当天的硬指标。</p>
+  </div>
+
+  <footer>Java 学习笔记 · 静态站点 · 由 GitHub Pages 托管</footer>
+</div>
+</body>
+</html>

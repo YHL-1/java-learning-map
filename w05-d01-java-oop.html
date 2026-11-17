@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W05 · D1 · 环境、语法与 OOP</title>
+<style>
+:root{
+  --bg:#070b14; --bg2:#0a1120; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --java:#ffb454; --java2:#fb7185; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa; --blue:#60a5fa;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{
+  margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 10% -6%,rgba(255,180,84,.10),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 92% 4%,rgba(167,139,250,.10),transparent 62%),
+    radial-gradient(ellipse 50% 35% at 50% 105%,rgba(61,220,151,.07),transparent 60%);
+  background-attachment:fixed;
+}
+a{color:inherit}
+::selection{background:var(--java);color:#1a1005}
+
+/* ---------- progress ---------- */
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--java),var(--java2));box-shadow:0 0 14px rgba(255,180,84,.7)}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--java);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+
+/* ---------- layout ---------- */
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--java);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--java)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:760px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--java);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(255,180,84,.12);
+  color:var(--java);padding:1px 6px;border-radius:5px;border:1px solid rgba(255,180,84,.18)}
+
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+
+/* ---------- hero ---------- */
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 b{background:linear-gradient(100deg,var(--java),#ffe0a8 45%,var(--java2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--java);font-weight:700}
+.orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.16;pointer-events:none;z-index:-1;
+  animation:float 14s ease-in-out infinite alternate}
+.orb.a{width:420px;height:420px;background:#ffb454;left:-120px;top:8%}
+.orb.b{width:380px;height:380px;background:#a78bfa;right:-120px;top:26%;animation-delay:-6s}
+@keyframes float{from{transform:translate3d(0,-20px,0)}to{transform:translate3d(30px,26px,0)}}
+
+/* ---------- jdk nested ---------- */
+.nest{position:relative;height:340px;margin:22px 0 8px}
+.nest .ring{position:absolute;inset:0;margin:auto;border-radius:26px;padding:12px 18px;
+  border:1.5px solid;opacity:0;transform:scale(.88);
+  transition:opacity .7s,transform .7s cubic-bezier(.2,.8,.3,1)}
+.nest .ring.on{opacity:1;transform:none}
+.nest .r-jdk{width:100%;height:100%;border-color:rgba(255,180,84,.5);
+  background:radial-gradient(circle at 50% 50%,rgba(255,180,84,.10),rgba(255,180,84,.02))}
+.nest .r-jre{width:74%;height:70%;border-color:rgba(34,211,238,.5);
+  background:radial-gradient(circle at 50% 50%,rgba(34,211,238,.10),rgba(34,211,238,.02))}
+.nest .r-jvm{width:46%;height:40%;border-color:rgba(61,220,151,.55);
+  background:radial-gradient(circle at 50% 50%,rgba(61,220,151,.14),rgba(61,220,151,.03));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.nest .tag{font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:.12em}
+.nest .r-jdk .tag{color:var(--java)}
+.nest .r-jre .tag{color:var(--cyan)}
+.nest .r-jvm .tag{color:var(--green)}
+.nest .sub{font-size:11.5px;color:var(--muted);margin-top:3px;letter-spacing:0;line-height:1.6}
+.nest .r-jvm .sub{margin-top:4px}
+
+/* ---------- pipeline ---------- */
+.pipe{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:20px 0}
+.pnode{flex:1 1 0;min-width:120px;text-align:center;border:1px solid var(--line);border-radius:12px;
+  padding:14px 8px;background:var(--panel);opacity:.28;transform:translateY(6px);transition:.5s;position:relative}
+.pnode.on{opacity:1;transform:none;border-color:var(--line2);
+  box-shadow:0 0 0 1px rgba(255,180,84,.18),0 10px 26px rgba(0,0,0,.35)}
+.pnode.now{border-color:var(--java);box-shadow:0 0 24px rgba(255,180,84,.28)}
+.pnode .ic{font-family:var(--mono);font-size:11px;color:var(--java);letter-spacing:.1em}
+.pnode .nm{font-size:13px;margin-top:4px;font-weight:600}
+.pnode .ds{font-size:11px;color:var(--faint);margin-top:2px}
+.parrow{color:var(--faint);padding:0 8px;font-size:13px}
+
+/* ---------- stepper ---------- */
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);
+  overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* pipeline nodes：始终占位，靠透明度区分「已到达 / 未到达」 */
+.pnode[data-step]{display:block;opacity:.22;transform:translateY(6px);transition:.5s}
+.pnode[data-step].on{opacity:1;transform:none;animation:none}
+.pnode[data-step].now{border-color:var(--java);box-shadow:0 0 26px rgba(255,180,84,.3)}
+
+/* ---------- memory ---------- */
+.mem{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.mcol{border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(255,255,255,.02);min-height:190px}
+.mcol .h{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--muted);
+  border-bottom:1px dashed var(--line);padding-bottom:7px;margin-bottom:10px}
+.slot{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);
+  border-radius:8px;padding:7px 11px;margin:7px 0;font-family:var(--mono);font-size:12.5px;background:var(--panel2)}
+.slot .v{color:var(--java)}
+.obj{border:1px solid rgba(61,220,151,.35);border-radius:10px;padding:9px 12px;margin:8px 0;
+  background:linear-gradient(150deg,rgba(61,220,151,.10),rgba(61,220,151,.02));font-family:var(--mono);font-size:12.5px}
+.obj .ttl{color:var(--green);font-size:11px;letter-spacing:.1em;margin-bottom:4px}
+.ref{color:var(--cyan)}
+.arrowdown{text-align:center;color:var(--faint);font-size:18px;line-height:1;margin:2px 0}
+
+/* ---------- value pass ---------- */
+.frames{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.frame{border:1px solid var(--line2);border-radius:12px;padding:12px;background:var(--panel2);transition:.4s}
+.frame.active{border-color:var(--java);box-shadow:0 0 0 1px rgba(255,180,84,.25),0 0 30px rgba(255,180,84,.12)}
+.frame .fh{font-size:11.5px;color:var(--muted);font-family:var(--mono);letter-spacing:.1em;margin-bottom:8px}
+.var{display:flex;justify-content:space-between;border:1px solid var(--line);border-radius:7px;
+  padding:6px 10px;margin:6px 0;font-family:var(--mono);font-size:12.5px;transition:.35s;background:#0a1120}
+.var .val{color:var(--java);font-weight:700}
+.var.flash{background:rgba(255,180,84,.18);border-color:var(--java)}
+.var.copied{background:rgba(34,211,238,.14);border-color:var(--cyan)}
+.caption{font-size:12.5px;color:var(--muted);min-height:44px;border-left:2px solid var(--java);
+  padding:6px 0 6px 12px;margin:16px 0 0;transition:.3s}
+
+/* ---------- vtable ---------- */
+.vt{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+.vcard{border:1px solid var(--line2);border-radius:12px;padding:12px 16px;background:var(--panel2);
+  min-width:170px;transition:.4s}
+.vcard .lb{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.1em}
+.vcard .nm{font-family:var(--mono);font-size:13px;color:var(--text);margin-top:3px}
+.vcard.hl{border-color:var(--violet);box-shadow:0 0 26px rgba(167,139,250,.3)}
+.slotrow{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px;
+  padding:6px 10px;border-radius:7px;margin:5px 0;transition:.35s;border:1px solid transparent}
+.slotrow.hit{border-color:var(--green);background:rgba(61,220,151,.14)}
+.slotrow .fn{color:var(--cyan)}
+
+/* ---------- table ---------- */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--java)}
+
+/* ---------- quiz ---------- */
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(255,180,84,.35);background:rgba(255,180,84,.05)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--java);color:var(--java);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+
+/* ---------- misc ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--java);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:88px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){
+  .grid2,.grid3,.mem,.frames{grid-template-columns:1fr}
+  .nest{height:290px}
+  .pnode{min-width:100px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="orb a"></div><div class="orb b"></div>
+
+<nav>
+  <span class="brand">W05 · D1</span>
+  <a href="#s1">环境三件套</a>
+  <a href="#s2">编译执行</a>
+  <a href="#s3">变量与内存</a>
+  <a href="#s4">值传递</a>
+  <a href="#s5">OOP 三要素</a>
+  <a href="#s6">接口 vs 抽象类</a>
+  <a href="#s7">订单模型</a>
+  <a href="#s8">自测</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 05 · DAY 01 · 12.08</p>
+  <h1>环境、语法与 <b>OOP</b></h1>
+  <p class="lead">今天的目标不是背概念，而是能<b>画出来</b>：JDK/JRE/JVM 的包含关系、一段代码从 .java 到运行的全过程、变量在内存里的样子、以及为什么 Java 只有值传递。</p>
+  <div class="meta">
+    <span class="pill">任务 <b>1 / 3</b> · 概念与原理</span>
+    <span class="pill">预计 <b>2.5 h</b></span>
+    <span class="pill">产出：<b>能口述三张图</b></span>
+  </div>
+
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>JDK/JRE/JVM、编译执行链路、封装继承多态、接口与抽象类</span></div>
+    <div class="kv"><b>02</b><span>用 OOP 设计订单 / 商品 / 用户模型，完成创建与查询流程</span></div>
+    <div class="kv"><b>03</b><span>讲清值传递、多态原理、接口 vs 抽象类</span></div>
+  </div>
+</header>
+
+<!-- ================= 1 ================= -->
+<section id="s1">
+  <p class="kicker">01 / ENVIRONMENT</p>
+  <h2>JDK、JRE、JVM：<em>三个同心圆</em></h2>
+  <p class="lead">先纠正一个常见误解：它们不是"并列的三个东西"，而是<b>层层包含</b>。面试问"三者区别"，答的是包含关系 + 各自职责，不是背定义。</p>
+
+  <div class="nest" id="nest">
+    <div class="ring r-jdk">
+      <div>
+        <div class="tag">JDK</div>
+        <div class="sub">Java Development Kit · 开发工具包<br>javac / javadoc / jar / jps / jstack / jmap / jconsole</div>
+      </div>
+      <div class="ring r-jre" style="position:absolute">
+        <div>
+          <div class="tag">JRE</div>
+          <div class="sub">Java Runtime Environment · 运行环境<br>核心类库 java.base、java.sql、java.net…</div>
+        </div>
+        <div class="ring r-jvm" style="position:absolute">
+          <div style="text-align:center">
+            <div class="tag">JVM</div>
+            <div class="sub">执行字节码<br>屏蔽操作系统差异</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>一句话说清各自职责</h4>
+    <div class="kv"><b>JVM</b><span>一份<b>规范</b>（虚拟机指令集、内存模型），HotSpot 是它的主流实现。负责加载 .class、管理内存、执行字节码。它<b>自己</b>是平台相关的——Windows 版和 Linux 版是两个程序。</span></div>
+    <div class="kv"><b>JRE</b><span>= JVM + 标准类库。你写的 <code class="i">String</code>、<code class="i">List</code> 不在 JVM 里，在类库里。</span></div>
+    <div class="kv"><b>JDK</b><span>= JRE + 开发工具。装了 JDK 就不用单独装 JRE——它包含 JRE。</span></div>
+  </div>
+
+  <div class="card tip">
+    <h4>所以"Java 跨平台"到底跨的是什么？</h4>
+    <p>跨的是<b>字节码</b>，不是 JVM。同一份 <code class="i">Hello.class</code>，在 Windows 的 JVM 和 Linux 的 JVM 上都能跑；但 JVM 本身要为每个操作系统单独编译一份。<br>
+    这就是 "Write Once, Run Anywhere" 的真实含义：<b>源码/字节码一次编写，靠各平台的 JVM 各自承接</b>。</p>
+  </div>
+
+  <h3>版本与字节码版本号</h3>
+  <p>面试常问"Java 8 和 Java 17 的区别"，也可能问 class 文件的版本号。记住这条线：</p>
+  <table>
+    <tr><th>JDK 版本</th><th>class 文件版本</th><th>地位</th></tr>
+    <tr><td>Java 8</td><td>52</td><td>历史分水岭（Lambda / Stream 诞生），存量系统最多</td></tr>
+    <tr><td>Java 11</td><td>55</td><td>LTS，开始去 JRE 化</td></tr>
+    <tr><td>Java 17</td><td>61</td><td>LTS，Spring Boot 3 的最低要求</td></tr>
+    <tr><td>Java 21</td><td>65</td><td>LTS，<b>虚拟线程</b>正式落地</td></tr>
+  </table>
+
+  <div class="card warn">
+    <h4>延伸问题：为什么从 JDK 11 开始不再单独发布 JRE 了？</h4>
+    <p>因为 <b>jlink</b> 可以按需裁剪出只包含所需模块的运行时镜像（自定义 JRE），通用 JRE 的存在意义变小。面试答到"模块化 + jlink 裁剪"即可，不必展开。</p>
+  </div>
+</section>
+
+<!-- ================= 2 ================= -->
+<section id="s2">
+  <p class="kicker">02 / COMPILE &amp; RUN</p>
+  <h2>从 <em>.java</em> 到运行的完整链路</h2>
+  <p class="lead">Java 既不是纯编译型，也不是纯解释型——它是<b>编译成字节码 + 运行时解释/JIT 编译</b>的混合模式。点播放看完整流水线。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="pipe stage">
+      <div class="pnode" data-step="1"><div class="ic">SOURCE</div><div class="nm">Hello.java</div><div class="ds">人类可读源码</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode" data-step="2"><div class="ic">javac</div><div class="nm">词法/语法分析</div><div class="ds">AST + 语义检查</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode" data-step="3"><div class="ic">BYTECODE</div><div class="nm">Hello.class</div><div class="ds">平台无关字节码</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode" data-step="4"><div class="ic">CLASSLOADER</div><div class="nm">类加载</div><div class="ds">方法区 + 堆</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode" data-step="5"><div class="ic">ENGINE</div><div class="nm">解释 + JIT</div><div class="ds">热点代码编译成机器码</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode" data-step="6"><div class="ic">OUTPUT</div><div class="nm">运行结果</div><div class="ds">stdout / 副作用</div></div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 6</span>
+    </div>
+  </div>
+
+  <h3>javac 内部做了什么</h3>
+  <ol>
+    <li><b>词法分析</b>：把字符流切成 Token（<code class="i">public</code>、<code class="i">class</code>、标识符…）。</li>
+    <li><b>语法分析</b>：Token 组成抽象语法树 AST，语法错在这里报（少个分号）。</li>
+    <li><b>语义分析</b>：类型检查、符号表解析、泛型擦除。类型不匹配在这里报。</li>
+    <li><b>字节码生成</b>：AST 翻译成 JVM 指令集，写出 .class（含常量池、方法表、字段表）。</li>
+  </ol>
+
+  <h3>类加载五个阶段</h3>
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <div class="kv"><b>加载</b><span>读取 .class 二进制，生成 Class 对象放进堆</span></div>
+      <div class="kv"><b>验证</b><span>文件格式、元数据、字节码合法性检查</span></div>
+      <div class="kv"><b>准备</b><span>静态变量分配内存 + 赋<b>零值</b>（不是代码里的初值！）</span></div>
+      <div class="kv"><b>解析</b><span>符号引用 → 直接引用</span></div>
+      <div class="kv"><b>初始化</b><span>执行 <code class="i">&lt;clinit&gt;</code>，静态变量赋真值、执行 static 块</span></div>
+    </div>
+    <div class="card tip" style="margin:0">
+      <h4>高频陷阱</h4>
+      <p><code class="i">static int a = 1;</code> 在<b>准备</b>阶段 a 是 0，到<b>初始化</b>阶段才变成 1。<br>
+      所以"静态变量什么时候赋值"要分两阶段答，直接说"类加载时赋值"会被追问。</p>
+    </div>
+  </div>
+
+  <h3>解释执行 vs JIT 编译</h3>
+  <p>JVM 执行字节码时先<b>解释</b>（逐条翻译，启动快、执行慢），同时统计每个方法/循环的调用次数；超过阈值（热点代码）就交给 <b>JIT</b> 编译成本地机器码并缓存。</p>
+  <ul>
+    <li><b>C1</b>：编译快、优化浅，适合快速启动。</li>
+    <li><b>C2</b>：编译慢、激进优化（内联、逃逸分析、锁消除），适合长期运行。</li>
+    <li>两者共存叫<b>分层编译</b>（Tiered Compilation），Java 8 之后默认开启。</li>
+  </ul>
+  <div class="card">
+    <h4>一句话答面试</h4>
+    <p>"Java 先由 javac 编译成与平台无关的字节码，运行时由 JVM 解释执行；热点代码再经 JIT 编译为机器码。所以它兼具编译型和解释型的特征。"</p>
+  </div>
+
+  <h3>用字节码看懂 <code class="i">i = i++</code></h3>
+  <p>这是变量流程最经典的一道题：<code class="i">int i = 0; i = i++;</code> 之后 <b>i 还是 0</b>。为什么？把字节码一步步走一遍就明白了。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>第 1 步 · 视角</b>　局部变量表里 <code class="i">i = 0</code>；操作数栈是空的。</p>
+        <div class="frames">
+          <div class="frame"><div class="fh">局部变量表</div><div class="var"><span>i</span><span class="val">0</span></div></div>
+          <div class="frame"><div class="fh">操作数栈（空的）</div><div style="color:var(--faint);font-family:var(--mono);font-size:12px;padding:8px">—</div></div>
+        </div>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>第 2 步 · <code class="i">iload_1</code></b>　把 i 的<b>当前值 0</b> 压入操作数栈。<span class="anno">（压的是副本，不是 i 本身）</span></p>
+        <div class="frames">
+          <div class="frame"><div class="fh">局部变量表</div><div class="var"><span>i</span><span class="val">0</span></div></div>
+          <div class="frame active"><div class="fh">操作数栈</div><div class="var flash"><span>栈顶</span><span class="val">0</span></div></div>
+        </div>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>第 3 步 · <code class="i">iinc 1, 1</code></b>　把局部变量 i 自增为 1。<span class="anno">（注意：栈里那个 0 没变！）</span></p>
+        <div class="frames">
+          <div class="frame active"><div class="fh">局部变量表</div><div class="var flash"><span>i</span><span class="val">1</span></div></div>
+          <div class="frame"><div class="fh">操作数栈</div><div class="var"><span>栈顶</span><span class="val">0</span></div></div>
+        </div>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>第 4 步 · <code class="i">istore_1</code></b>　把栈顶的 <b>0</b> 写回局部变量 i。覆盖掉了刚才的 1。</p>
+        <div class="frames">
+          <div class="frame active"><div class="fh">局部变量表</div><div class="var flash"><span>i</span><span class="val">0</span></div></div>
+          <div class="frame"><div class="fh">操作数栈</div><div class="var"><span>栈顶</span><span class="val">0</span></div></div>
+        </div>
+        <p style="color:var(--java);margin-top:14px"><b>结论：i = 0。</b> 而 <code class="i">i = ++i</code> 是「先自增再把新值压栈」，所以结果是 1。差别就在 <code class="i">iload</code> 和 <code class="i">iinc</code> 的<b>顺序</b>。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <p>自己验证：<code class="i">javac Hello.java</code> 然后 <code class="i">javap -c Hello</code>，你会看到真实的指令序列。</p>
+</section>
+
+<!-- ================= 3 ================= -->
+<section id="s3">
+  <p class="kicker">03 / MEMORY</p>
+  <h2>变量到底存在哪：<em>栈与堆</em></h2>
+  <p class="lead">不理解内存，值传递和多态都只能死记。先建立这张图：<b>局部变量在栈帧</b>，<b>对象实例在堆</b>，引用变量里存的是地址。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 基本类型直接存值</b></p>
+        <div class="mem">
+          <div class="mcol"><div class="h">栈 · main 栈帧</div>
+            <div class="slot"><span>int age</span><span class="v">18</span></div>
+            <div class="slot"><span>double price</span><span class="v">99.9</span></div>
+          </div>
+          <div class="mcol"><div class="h">堆</div><div style="color:var(--faint);font-size:12px;padding:8px">（空）</div></div>
+        </div>
+        <p class="anno">int / long / double / boolean 等 8 种基本类型，变量里装的就是值本身。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 引用类型：栈里存地址，堆里存对象</b></p>
+        <div class="mem">
+          <div class="mcol"><div class="h">栈 · main 栈帧</div>
+            <div class="slot"><span>Order order</span><span class="v ref">0x7f3a →</span></div>
+          </div>
+          <div class="mcol"><div class="h">堆</div>
+            <div class="obj"><div class="ttl">Order @ 0x7f3a</div>
+              id = 1001 &nbsp;·&nbsp; amount = 259.00 &nbsp;·&nbsp; status = CREATED
+            </div>
+          </div>
+        </div>
+        <p class="anno">关键：<code class="i">order</code> 这个变量里装的<b>不是对象</b>，是一个地址。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 两个引用指向同一个对象</b></p>
+        <div class="mem">
+          <div class="mcol"><div class="h">栈</div>
+            <div class="slot"><span>a</span><span class="v ref">0x7f3a →</span></div>
+            <div class="slot"><span>b</span><span class="v ref">0x7f3a →</span></div>
+          </div>
+          <div class="mcol"><div class="h">堆</div>
+            <div class="obj"><div class="ttl">Order @ 0x7f3a</div>amount = 259.00</div>
+          </div>
+        </div>
+        <p class="anno"><code class="i">Order b = a;</code> 复制的是地址，所以 a 改字段 b 也能看到。<b>这就是后面值传递的全部秘密。</b></p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 3</span>
+    </div>
+  </div>
+
+  <h3>JVM 运行时数据区（先建立印象，W08 展开）</h3>
+  <table>
+    <tr><th>区域</th><th>存什么</th><th>线程</th><th>会 OOM 吗</th></tr>
+    <tr><td>程序计数器 PC</td><td>当前执行的字节码行号</td><td>私有</td><td>不会</td></tr>
+    <tr><td>虚拟机栈</td><td>栈帧：局部变量表、操作数栈、动态链接、返回地址</td><td>私有</td><td>会（StackOverflowError / OOM）</td></tr>
+    <tr><td>本地方法栈</td><td>native 方法调用</td><td>私有</td><td>会</td></tr>
+    <tr><td>堆</td><td>对象实例、数组（GC 主战场）</td><td>共享</td><td>会</td></tr>
+    <tr><td>方法区 / 元空间</td><td>类元信息、运行时常量池、静态变量</td><td>共享</td><td>会（元空间溢出）</td></tr>
+  </table>
+
+  <div class="card warn">
+    <h4>经典题：<code class="i">new String("abc")</code> 创建了几个对象？</h4>
+    <p>若常量池中没有 "abc"：<b>2 个</b>——常量池里一个字符串字面量，堆里一个 String 对象。<br>
+    若常量池已存在：<b>1 个</b>（只创建堆对象）。<br>
+    要答出"看常量池是否已有"，这题才算过。</p>
+  </div>
+</section>
+
+<!-- ================= 4 ================= -->
+<section id="s4">
+  <p class="kicker">04 / PASS BY VALUE</p>
+  <h2>Java <em>只有值传递</em>，没有引用传递</h2>
+  <p class="lead">这是 D1 最容易被问倒的一题。结论先给：<b>实参的值被复制一份传给形参</b>。基本类型复制"值"，引用类型复制"地址"。所以——能改对象内容，但换不掉对象本身。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>场景 A：<code class="i">swap(int a, int b)</code></b>　调用方 <code class="i">x=1, y=2</code>。</p>
+        <div class="frames">
+          <div class="frame"><div class="fh">main 栈帧</div>
+            <div class="var"><span>x</span><span class="val">1</span></div>
+            <div class="var"><span>y</span><span class="val">2</span></div>
+          </div>
+          <div class="frame"><div class="fh">swap 栈帧（尚未创建）</div>
+            <div style="color:var(--faint);font-family:var(--mono);font-size:12px;padding:10px">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>拷贝发生</b>　调用 swap(x, y) 时，把 <b>1 和 2 各复制一份</b>放进新栈帧。</p>
+        <div class="frames">
+          <div class="frame"><div class="fh">main 栈帧</div>
+            <div class="var"><span>x</span><span class="val">1</span></div>
+            <div class="var"><span>y</span><span class="val">2</span></div>
+          </div>
+          <div class="frame active"><div class="fh">swap 栈帧</div>
+            <div class="var copied"><span>a</span><span class="val">1</span></div>
+            <div class="var copied"><span>b</span><span class="val">2</span></div>
+          </div>
+        </div>
+        <p class="anno">青色 = 复制出来的副本，和 x、y 再无关系。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>方法内交换</b>　swap 里把 a、b 的值对调。改的是<b>副本</b>。</p>
+        <div class="frames">
+          <div class="frame"><div class="fh">main 栈帧</div>
+            <div class="var"><span>x</span><span class="val">1</span></div>
+            <div class="var"><span>y</span><span class="val">2</span></div>
+          </div>
+          <div class="frame active"><div class="fh">swap 栈帧</div>
+            <div class="var flash"><span>a</span><span class="val">2</span></div>
+            <div class="var flash"><span>b</span><span class="val">1</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>方法返回</b>　swap 栈帧销毁，<b>x 和 y 一个字节都没变</b>。</p>
+        <div class="frames">
+          <div class="frame active"><div class="fh">main 栈帧</div>
+            <div class="var"><span>x</span><span class="val">1</span></div>
+            <div class="var"><span>y</span><span class="val">2</span></div>
+          </div>
+          <div class="frame"><div class="fh">swap 栈帧（已销毁）</div>
+            <div style="color:var(--faint);font-family:var(--mono);font-size:12px;padding:10px">—</div>
+          </div>
+        </div>
+        <p style="color:var(--java);margin-top:14px"><b>这就是"值传递"最直观的证明。</b>如果 Java 是引用传递，x、y 应该交换成功。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <h3>场景 B：传对象时，到底复制了什么？</h3>
+  <p>难点在这。<code class="i">void change(Order o)</code> 传进去的，是<b>地址的副本</b>（值传递依然成立）。所以会产生两种截然不同的结果：</p>
+
+  <pre><span class="c">// ① 修改对象内容 → 调用方能看到（因为两个引用指向同一个堆对象）</span>
+<span class="t">void</span> <span class="m">setAmount</span>(<span class="t">Order</span> o) {
+    o.amount = <span class="n">100</span>;        <span class="c">// 顺着地址改堆里的数据 → 生效</span>
+}
+
+<span class="c">// ② 重新赋值引用 → 调用方看不到（只是让副本指向了新对象）</span>
+<span class="t">void</span> <span class="m">replace</span>(<span class="t">Order</span> o) {
+    o = <span class="k">new</span> <span class="t">Order</span>(<span class="n">999</span>);   <span class="c">// 只改了副本 o 的指向 → 无效</span>
+}</pre>
+
+  <div class="grid2">
+    <div class="card tip" style="margin:0">
+      <h4>能生效</h4>
+      <p><code class="i">o.setXxx()</code>、<code class="i">list.add()</code>、<code class="i">arr[0]=1</code><br>都是"顺着地址改堆里的内容"。</p>
+    </div>
+    <div class="card warn" style="margin:0">
+      <h4>不生效</h4>
+      <p><code class="i">o = new ...</code>、<code class="i">s = "other"</code><br>都是"改副本的指向"，原引用纹丝不动。</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>那 String 为什么改不了？</h4>
+    <p>双重原因叠加：① 引用是副本；② <code class="i">String</code> 是<b>不可变对象</b>，任何"修改"都返回新对象。所以 <code class="i">void f(String s){ s = s + "!"; }</code> 对外部毫无影响。</p>
+  </div>
+
+  <div class="card">
+    <h4>面试标准答法（背这段结构）</h4>
+    <p>"Java 中方法参数传递只有值传递。基本类型传递的是值的副本；引用类型传递的是引用（地址）的副本，因此方法内可以通过这个副本修改原对象的状态，但无法让原引用指向新对象。所谓'引用传递'的说法不准确。"</p>
+  </div>
+
+  <div class="card warn">
+    <h4>追问：那怎么实现真正的交换？</h4>
+    <ul>
+      <li>返回数组 / 返回 Pair：<code class="i">int[] swap(int a, int b){ return new int[]{b,a}; }</code></li>
+      <li>交换对象里的字段（对象是可变的话）</li>
+      <li>用成员变量或容器承载结果</li>
+      <li>Java 没有 C# 的 <code class="i">ref</code> / C++ 的 <code class="i">&amp;</code>，语言层面做不到</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= 5 ================= -->
+<section id="s5">
+  <p class="kicker">05 / OOP</p>
+  <h2>封装、继承、<em>多态</em></h2>
+  <p class="lead">三个词都认识，但面试考的是细节：重写的规则、构造器的顺序、字段为什么不参与多态、动态分派发生在什么时候。</p>
+
+  <h3>封装：不是"加 getter/setter"</h3>
+  <p>封装的本质是<b>把"状态"和"对状态的合法操作"绑在一起，并且只暴露必要入口</b>。无脑生成 getter/setter 只是把 public 字段换了个写法，等于没封装。</p>
+  <pre><span class="k">public class</span> <span class="t">Order</span> {
+    <span class="k">private final</span> <span class="t">BigDecimal</span> amount;   <span class="c">// 私有 + final：外部不能乱改</span>
+
+    <span class="k">public</span> <span class="t">Order</span>(<span class="t">BigDecimal</span> amount) {
+        <span class="k">if</span> (amount == <span class="k">null</span> || amount.signum() &lt; <span class="n">0</span>) {
+            <span class="k">throw new</span> <span class="t">IllegalArgumentException</span>(<span class="s">"金额不合法"</span>);  <span class="c">// 构造时校验</span>
+        }
+        <span class="k">this</span>.amount = amount.setScale(<span class="n">2</span>, <span class="t">RoundingMode</span>.HALF_UP);
+    }
+    <span class="k">public</span> <span class="t">BigDecimal</span> <span class="m">getAmount</span>() { <span class="k">return</span> amount; }
+}</pre>
+  <p>封装的收益：<b>合法状态只能通过构造器/方法产生</b>，非法值在入口就被挡住，而不是散落在业务代码里靠调用方自觉。</p>
+
+  <h3>继承：构造器的执行顺序</h3>
+  <p>这点几乎每场面试都问。顺序是：<b>父类静态块 → 子类静态块 → 父类实例块 → 父类构造器 → 子类实例块 → 子类构造器</b>。静态块只在类初始化时执行一次。</p>
+  <pre><span class="k">class</span> <span class="t">A</span> {
+    <span class="k">static</span> { System.out.println(<span class="s">"A 静态块"</span>); }
+    { System.out.println(<span class="s">"A 实例块"</span>); }
+    <span class="t">A</span>() { System.out.println(<span class="s">"A 构造器"</span>); }
+}
+<span class="k">class</span> <span class="t">B</span> <span class="k">extends</span> <span class="t">A</span> {
+    <span class="k">static</span> { System.out.println(<span class="s">"B 静态块"</span>); }
+    { System.out.println(<span class="s">"B 实例块"</span>); }
+    <span class="t">B</span>() { System.out.println(<span class="s">"B 构造器"</span>); }
+}
+<span class="c">// new B() 输出：A 静态块 → B 静态块 → A 实例块 → A 构造器 → B 实例块 → B 构造器</span></pre>
+
+  <h3>重写（Override）的五条规则</h3>
+  <div class="card">
+    <div class="kv"><b>两同</b><span>方法名相同、参数列表相同（参数不同是重载，不是重写）</span></div>
+    <div class="kv"><b>两小</b><span>返回值类型更小（协变返回，可以是子类）、抛出的受检异常更小</span></div>
+    <div class="kv"><b>一大</b><span>访问权限不能更小（public 不能改成 protected）</span></div>
+    <div class="kv"><b>不能重写</b><span>final、static（静态方法叫隐藏）、private（不可见）、构造器</span></div>
+    <div class="kv"><b>注解</b><span>强烈建议加 <code class="i">@Override</code>，编译期帮你校验签名</span></div>
+  </div>
+
+  <h3>多态：方法表是怎么找到实现的</h3>
+  <p>多态成立有三个前提：<b>继承/实现</b> + <b>方法重写</b> + <b>父类引用指向子类对象</b>。但真正让它"跑起来"的，是运行时的<b>动态分派</b>：<code class="i">invokevirtual</code> 指令会去对象头里取实际类型的虚方法表，再查表找到真正的方法地址。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <pre style="margin-top:0"><span class="t">Animal</span> a = <span class="k">new</span> <span class="t">Dog</span>();   <span class="c">// 编译期类型 Animal，运行期类型 Dog</span>
+a.<span class="m">speak</span>();</pre>
+        <div class="vt">
+          <div class="vcard"><div class="lb">引用 a（栈）</div><div class="nm">类型声明：Animal</div></div>
+          <div style="color:var(--faint)">→</div>
+          <div class="vcard"><div class="lb">堆对象</div><div class="nm">实际类型：Dog</div></div>
+        </div>
+        <p class="anno">编译期：编译器只校验 Animal 有没有 speak()。它<b>不知道</b>将来跑什么。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>运行期查表</b>　JVM 拿到对象头里的<b>实际类型 Dog</b>，去 Dog 的虚方法表里查 <code class="i">speak</code>。</p>
+        <div class="vt">
+          <div class="vcard hl"><div class="lb">Dog 的虚方法表</div>
+            <div class="slotrow"><span class="fn">speak()</span><span>→ Dog.speak ★</span></div>
+            <div class="slotrow"><span class="fn">eat()</span><span>→ Animal.eat</span></div>
+            <div class="slotrow"><span class="fn">toString()</span><span>→ Object.toString</span></div>
+          </div>
+        </div>
+        <p class="anno">Dog 重写了 speak，表里指向 Dog 自己的实现；没重写的 eat 仍然指向父类。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>命中并调用</b>　执行 Dog.speak()，输出"汪汪"。</p>
+        <div class="vt">
+          <div class="vcard hl"><div class="lb">Dog 的虚方法表</div>
+            <div class="slotrow hit"><span class="fn">speak()</span><span>→ Dog.speak ★ 命中</span></div>
+            <div class="slotrow"><span class="fn">eat()</span><span>→ Animal.eat</span></div>
+          </div>
+        </div>
+        <p style="margin-top:14px;color:var(--java)"><b>这就是"编译看左边，运行看右边"。</b></p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 3</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>高频陷阱：成员变量不参与多态</h4>
+    <pre style="margin:8px 0 0"><span class="k">class</span> <span class="t">Animal</span> { <span class="t">String</span> name = <span class="s">"animal"</span>; <span class="t">String</span> <span class="m">getName</span>(){ <span class="k">return</span> name; } }
+<span class="k">class</span> <span class="t">Dog</span> <span class="k">extends</span> <span class="t">Animal</span> { <span class="t">String</span> name = <span class="s">"dog"</span>; }
+
+<span class="t">Animal</span> a = <span class="k">new</span> <span class="t">Dog</span>();
+System.out.println(a.name);       <span class="c">// animal ← 字段看编译期类型（静态绑定）</span>
+System.out.println(a.<span class="m">getName</span>());  <span class="c">// animal ← 方法体里的 name 是 Animal 的字段</span></pre>
+    <p style="margin-top:10px">字段没有"重写"概念，只有<b>隐藏</b>。所以不要在父类和子类里定义同名字段，这是纯粹的坑。</p>
+  </div>
+
+  <h3>向上转型与向下转型</h3>
+  <ul>
+    <li><b>向上转型</b>：<code class="i">Animal a = new Dog()</code>，自动、安全，但只能调用父类声明的方法。</li>
+    <li><b>向下转型</b>：<code class="i">Dog d = (Dog) a</code>，必须强转，类型不匹配抛 <code class="i">ClassCastException</code>。</li>
+    <li>先用 <code class="i">instanceof</code> 判断（Java 16+ 可写成 <code class="i">if (a instanceof Dog d)</code>，直接绑定变量）。</li>
+  </ul>
+</section>
+
+<!-- ================= 6 ================= -->
+<section id="s6">
+  <p class="kicker">06 / ABSTRACT vs INTERFACE</p>
+  <h2>接口与抽象类：<em>怎么选</em></h2>
+  <p class="lead">对比表背下来只是及格；能说出"什么场景用哪个"才是加分项。核心一句话：<b>抽象类表达 is-a（是什么），接口表达 can-do（能做什么）</b>。</p>
+
+  <table>
+    <tr><th>维度</th><th>抽象类 abstract class</th><th>接口 interface</th></tr>
+    <tr><td>构造器</td><td>有，可定义（子类 super 调用）</td><td>没有，不能实例化</td></tr>
+    <tr><td>字段</td><td>任意（含实例变量、可变状态）</td><td>只能是 <code>public static final</code> 常量</td></tr>
+    <tr><td>方法</td><td>抽象方法 + 具体方法都可以</td><td>抽象方法 / default / static / private（Java 9+）</td></tr>
+    <tr><td>继承数量</td><td>单继承（extends 一个）</td><td>多实现（implements 多个）</td></tr>
+    <tr><td>访问修饰</td><td>public / protected / 默认 / private</td><td>方法默认 public</td></tr>
+    <tr><td>语义</td><td>is-a，共享<b>状态与实现</b></td><td>can-do，约定<b>能力契约</b></td></tr>
+    <tr><td>典型场景</td><td>模板方法、骨架实现、有公共字段</td><td>能力扩展、跨继承体系解耦、函数式接口</td></tr>
+  </table>
+
+  <div class="grid2">
+    <div class="card tip" style="margin:0">
+      <h4>用抽象类</h4>
+      <p>多个子类<b>共享字段和部分实现</b>，且天然是同一族。<br>例：<code class="i">AbstractOrderService</code> 里放公共的下单校验、日志、事务模板，子类只实现 <code class="i">doCreate()</code>。</p>
+    </div>
+    <div class="card tip" style="margin:0">
+      <h4>用接口</h4>
+      <p>只想约定<b>能力</b>，实现方可能毫无血缘关系。<br>例：<code class="i">PayChannel</code>（微信/支付宝/银行卡）、<code class="i">Comparable</code>、<code class="i">Runnable</code>。</p>
+    </div>
+  </div>
+
+  <h3>Java 8 之后接口的进化</h3>
+  <pre><span class="k">public interface</span> <span class="t">PayChannel</span> {
+    <span class="t">boolean</span> <span class="m">pay</span>(<span class="t">BigDecimal</span> amount);              <span class="c">// 抽象方法</span>
+
+    <span class="k">default</span> <span class="t">String</span> <span class="m">channelName</span>() { <span class="k">return</span> <span class="s">"通用渠道"</span>; }   <span class="c">// 默认方法，子类可不实现</span>
+
+    <span class="k">static</span> <span class="t">PayChannel</span> <span class="m">of</span>(<span class="t">String</span> type) { ... }            <span class="c">// 静态方法，接口自己用</span>
+
+    <span class="k">private</span> <span class="t">void</span> <span class="m">log</span>(<span class="t">String</span> msg) { ... }                  <span class="c">// Java 9+，default 方法复用</span>
+}</pre>
+  <ul>
+    <li><b>default 方法</b>解决了"给接口加方法就破坏所有实现类"的问题（向后兼容）。</li>
+    <li><b>菱形冲突</b>：两个接口有同名 default 方法，实现类必须重写，或 <code class="i">InterfaceA.super.method()</code> 显式指定。</li>
+    <li><b>函数式接口</b>：只有一个抽象方法的接口，可配合 Lambda，如 <code class="i">Function</code>、<code class="i">Predicate</code>。</li>
+  </ul>
+
+  <div class="card">
+    <h4>一句话选择原则</h4>
+    <p>"需要复用<b>状态/实现</b>用抽象类，需要复用<b>契约</b>用接口；两者都要时，抽象类实现接口，再让子类继承抽象类——这也是 JDK 里 <code class="i">AbstractList</code> 实现 <code class="i">List</code> 的做法。"</p>
+  </div>
+</section>
+
+<!-- ================= 7 ================= -->
+<section id="s7">
+  <p class="kicker">07 / PRACTICE</p>
+  <h2>任务 2：订单 / 商品 / 用户<em>模型</em></h2>
+  <p class="lead">把今天的概念落到一个能跑的模型上。目标不是写完整业务，而是让"封装、继承、多态、接口"各自有地方站。</p>
+
+  <div class="card soft">
+    <h4>模型关系</h4>
+    <pre style="margin:8px 0 0"><span class="t">User</span> 1 ──&lt; N <span class="t">Order</span> 1 ──&lt; N <span class="t">OrderItem</span> N ──&gt; 1 <span class="t">Product</span>
+
+<span class="t">Order</span> 持有 <span class="t">List</span>&lt;<span class="t">OrderItem</span>&gt;，<span class="t">OrderItem</span> 记录下单时的<b>价格快照</b>（商品调价不影响历史订单）
+<span class="t">OrderStatus</span> 用枚举：CREATED / PAID / CANCELLED
+<span class="t">PayChannel</span> 用接口 + 多个实现 → 演示多态</pre>
+  </div>
+
+  <h3>关键代码骨架</h3>
+  <pre><span class="c">// ① 枚举：状态用枚举，不用 int 常量</span>
+<span class="k">public enum</span> <span class="t">OrderStatus</span> { CREATED, PAID, CANCELLED }
+
+<span class="c">// ② 值对象：金额一律 BigDecimal，禁止 double</span>
+<span class="k">public final class</span> <span class="t">Money</span> {
+    <span class="k">private final</span> <span class="t">BigDecimal</span> value;
+    <span class="k">public</span> <span class="t">Money</span>(<span class="t">BigDecimal</span> v) {
+        <span class="k">if</span> (v == <span class="k">null</span> || v.signum() &lt; <span class="n">0</span>) <span class="k">throw new</span> <span class="t">IllegalArgumentException</span>(<span class="s">"金额非法"</span>);
+        <span class="k">this</span>.value = v.setScale(<span class="n">2</span>, <span class="t">RoundingMode</span>.HALF_UP);
+    }
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">plus</span>(<span class="t">Money</span> o) { <span class="k">return new</span> <span class="t">Money</span>(value.add(o.value)); }
+    <span class="k">public</span> <span class="t">BigDecimal</span> <span class="m">value</span>() { <span class="k">return</span> value; }
+}
+
+<span class="c">// ③ 商品：不可变，价格改动只能产生新对象</span>
+<span class="k">public record</span> <span class="t">Product</span>(<span class="t">long</span> id, <span class="t">String</span> name, <span class="t">Money</span> price) { }
+
+<span class="c">// ④ 订单项：价格快照</span>
+<span class="k">public record</span> <span class="t">OrderItem</span>(<span class="t">Product</span> product, <span class="t">int</span> qty, <span class="t">Money</span> unitPrice) {
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">subtotal</span>() { <span class="k">return new</span> <span class="t">Money</span>(unitPrice.value().multiply(<span class="t">BigDecimal</span>.valueOf(qty))); }
+}
+
+<span class="c">// ⑤ 多态：支付渠道</span>
+<span class="k">public interface</span> <span class="t">PayChannel</span> {
+    <span class="t">String</span> <span class="m">name</span>();
+    <span class="t">void</span> <span class="m">pay</span>(<span class="t">Order</span> order);
+}
+<span class="k">public class</span> <span class="t">AliPay</span> <span class="k">implements</span> <span class="t">PayChannel</span> {
+    <span class="k">public</span> <span class="t">String</span> <span class="m">name</span>() { <span class="k">return</span> <span class="s">"支付宝"</span>; }
+    <span class="k">public void</span> <span class="m">pay</span>(<span class="t">Order</span> order) { <span class="c">/* 调 SDK */</span> }
+}
+
+<span class="c">// ⑥ 订单：封装 + 状态流转</span>
+<span class="k">public class</span> <span class="t">Order</span> {
+    <span class="k">private final</span> <span class="t">String</span> id;
+    <span class="k">private final</span> <span class="t">long</span> userId;
+    <span class="k">private final</span> <span class="t">List</span>&lt;<span class="t">OrderItem</span>&gt; items = <span class="k">new</span> <span class="t">ArrayList</span>&lt;&gt;();
+    <span class="k">private</span> <span class="t">OrderStatus</span> status = <span class="t">OrderStatus</span>.CREATED;
+
+    <span class="k">public void</span> <span class="m">addItem</span>(<span class="t">OrderItem</span> item) {
+        <span class="k">if</span> (status != <span class="t">OrderStatus</span>.CREATED) <span class="k">throw new</span> <span class="t">IllegalStateException</span>(<span class="s">"已支付不可修改"</span>);
+        items.add(item);
+    }
+    <span class="k">public</span> <span class="t">Money</span> <span class="m">total</span>() {
+        <span class="k">return</span> items.stream().map(<span class="t">OrderItem</span>::subtotal)
+                    .reduce(<span class="k">new</span> <span class="t">Money</span>(<span class="t">BigDecimal</span>.ZERO), <span class="t">Money</span>::plus);
+    }
+    <span class="k">public void</span> <span class="m">pay</span>(<span class="t">PayChannel</span> channel) {   <span class="c">// 依赖接口 → 可插拔，运行时决定实现</span>
+        channel.pay(<span class="k">this</span>);
+        <span class="k">this</span>.status = <span class="t">OrderStatus</span>.PAID;
+    }
+}</pre>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1"><p style="margin-top:0"><b>① 创建用户</b>　<code class="i">User u = new User(1001L, "张三")</code>　→ 校验非空。</p></div>
+      <div data-step="2"><p style="margin-top:0"><b>② 挑选商品</b>　<code class="i">Product p = new Product(2001L, "机械键盘", new Money("399.00"))</code>　→ 不可变值对象。</p></div>
+      <div data-step="3"><p style="margin-top:0"><b>③ 加入订单项</b>　<code class="i">order.addItem(new OrderItem(p, 2, p.price()))</code>　→ 记录价格快照；状态非 CREATED 会拒绝。</p></div>
+      <div data-step="4"><p style="margin-top:0"><b>④ 计算总价</b>　<code class="i">order.total()</code>　→ 逐项 <code class="i">subtotal</code> 再 <code class="i">plus</code>，全程 BigDecimal，无精度损失。</p></div>
+      <div data-step="5"><p style="margin-top:0"><b>⑤ 支付（多态）</b>　<code class="i">order.pay(new AliPay())</code>　→ 传入不同实现，行为不同，Order 无需 if-else 判断渠道。</p></div>
+      <div data-step="6"><p style="margin-top:0"><b>⑥ 查询</b>　<code class="i">List&lt;Order&gt; list = repo.findByUser(1001L)</code>　→ 返回<b>防御性拷贝</b>，避免外部改内部集合。</p></div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 6</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>钱相关三个硬规定</h4>
+    <ul>
+      <li><b>禁止 double</b>：<code class="i">0.1 + 0.2 != 0.3</code>，二进制浮点存不下十进制小数。</li>
+      <li><b>禁止 equals 比较</b>：<code class="i">new BigDecimal("1.0").equals(new BigDecimal("1.00"))</code> 是 <code class="i">false</code>（scale 不同），要用 <code class="i">compareTo</code>。</li>
+      <li><b>必须指定 scale 和舍入模式</b>：除法 <code class="i">1/3</code> 不指定会抛 <code class="i">ArithmeticException</code>。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= 8 ================= -->
+<section id="s8">
+  <p class="kicker">08 / SELF CHECK</p>
+  <h2>今天的<em>自测</em></h2>
+  <p class="lead">先自己回答，再展开对照。答不出来的，回到对应小节重看。</p>
+
+  <details><summary>JDK、JRE、JVM 三者的关系？</summary>
+    <p>JVM 是执行字节码的虚拟机（规范 + 实现）；JRE = JVM + 标准类库；JDK = JRE + 开发工具。包含关系是 JDK ⊃ JRE ⊃ JVM。跨平台靠的是字节码 + 各平台各自的 JVM 实现。</p></details>
+
+  <details><summary>Java 是编译型还是解释型？</summary>
+    <p>混合型。javac 先编译成平台无关字节码，JVM 运行时解释执行；热点代码由 JIT（C1/C2 分层编译）编译为机器码。</p></details>
+
+  <details><summary>类加载的五个阶段，静态变量在哪一步赋初值？</summary>
+    <p>加载 → 验证 → 准备 → 解析 → 初始化。准备阶段分配内存并赋<b>零值</b>，初始化阶段执行 <code class="i">&lt;clinit&gt;</code> 才赋代码里的真实初值。</p></details>
+
+  <details><summary><code class="i">int i = 0; i = i++;</code> 之后 i 是多少？为什么？</summary>
+    <p>0。字节码顺序是 iload_1（把 0 压栈）→ iinc（局部变量变 1）→ istore_1（把栈里的 0 写回，覆盖 1）。<code class="i">i = ++i</code> 才是 1。</p></details>
+
+  <details><summary>Java 是值传递还是引用传递？为什么 <code class="i">swap(int,int)</code> 无效？</summary>
+    <p>只有值传递。基本类型传值的副本，方法内改副本不影响调用方。引用类型传的是地址的副本，所以能通过副本修改堆对象内容，但无法改变原引用的指向。</p></details>
+
+  <details><summary>为什么传对象进去 <code class="i">o = new Order()</code> 无效，<code class="i">o.setX()</code> 有效？</summary>
+    <p><code class="i">o = new</code> 只改变了副本 <code class="i">o</code> 的指向；<code class="i">o.setX()</code> 是顺着副本里的地址去改堆上的同一个对象。</p></details>
+
+  <details><summary>重写（Override）有哪些规则？</summary>
+    <p>两同（方法名、参数列表）、两小（返回类型协变、受检异常更小）、一大（访问权限不缩小）。final/static/private/构造器不能被重写；建议加 <code class="i">@Override</code>。</p></details>
+
+  <details><summary>父类和子类构造器、静态块、实例块的执行顺序？</summary>
+    <p>父静态块 → 子静态块 → 父实例块 → 父构造器 → 子实例块 → 子构造器。静态块只执行一次。</p></details>
+
+  <details><summary>多态的实现原理？为什么"编译看左边，运行看右边"？</summary>
+    <p>编译期检查引用类型的声明类型是否有该方法；运行期由 <code class="i">invokevirtual</code> 取对象实际类型的虚方法表，查表定位到重写后的实现，实现动态分派。</p></details>
+
+  <details><summary>成员变量为什么不多态？</summary>
+    <p>字段只有"隐藏"，不参与动态分派，访问时按引用变量的<b>声明类型</b>静态绑定。所以 <code class="i">Animal a = new Dog()</code> 时 <code class="i">a.name</code> 取的是 Animal 的字段。</p></details>
+
+  <details><summary>接口和抽象类怎么选？</summary>
+    <p>抽象类用于共享状态与实现（is-a），接口用于约定能力契约（can-do，且可多实现）。两者都要时：抽象类实现接口，子类继承抽象类。</p></details>
+
+  <details><summary>订单金额为什么必须用 BigDecimal？有哪些坑？</summary>
+    <p>double 有二进制精度误差。坑：① 用 <code class="i">equals</code> 比较会因 scale 不同返回 false，要用 <code class="i">compareTo</code>；② 除法必须指定 scale 和 RoundingMode，否则可能抛 ArithmeticException；③ 必须显式 setScale 统一精度。</p></details>
+
+  <div class="card tip" style="margin-top:28px">
+    <h4>D1 完成标准（自我验收）</h4>
+    <ul>
+      <li>能不看资料画出 JDK ⊃ JRE ⊃ JVM，并说出各自职责</li>
+      <li>能口述 .java → .class → 类加载 → 执行 的完整链路</li>
+      <li>能用栈帧图解释 <code class="i">swap</code> 为什么无效</li>
+      <li>能说清多态的编译期/运行期分界，以及字段为什么例外</li>
+      <li>能不看笔记把订单模型的核心类和校验点写出来</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">全中 → 进 D2（Object 与核心类）。有 2 条以上卡住 → 今天别往下走，先把卡住那节重做一遍。</p>
+  </div>
+</section>
+
+<footer>W05 · D1 · 环境、语法与 OOP　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+/* ---------- 顶部进度条 ---------- */
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+
+/* ---------- 段落入场 ---------- */
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .08});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+
+/* ---------- JDK 嵌套圆环：进入视口后依次点亮 ---------- */
+const nest = document.getElementById('nest');
+if (nest) {
+  const rings = [...nest.querySelectorAll('.ring')];
+  const io2 = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting) {
+        rings.forEach((r, i) => setTimeout(() => r.classList.add('on'), 180 + i * 340));
+        io2.unobserve(e.target);
+      }
+    });
+  }, {threshold: .3});
+  io2.observe(nest);
+}
+
+/* ---------- 通用分步播放器 ---------- */
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+
+  function render() {
+    items.forEach(el => {
+      const s = +el.dataset.step;
+      el.classList.toggle('on', s <= cur);
+      el.classList.toggle('now', s === cur && s > 0);
+    });
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+    btnPlay.textContent = '▶ 播放';
+  }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => {
+      if (cur >= max) { stop(); return; }
+      go(cur + 1);
+    }, 1500);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>
