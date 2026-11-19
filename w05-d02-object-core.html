@@ -377,7 +377,7 @@ System.out.println(map.get(u));  <span class="c">// null ← 找不到了！</sp
 <section id="s4">
   <p class="kicker">04 / INCIDENT</p>
   <h2>事故现场：<em>只重写 equals</em></h2>
-  <p class="lead">这是面试最爱问的"现场题"。两个对象内容一模一样，<code class="i">equals</code> 返回 true，但放进 HashSet 却有两个，<code class="i">contains</code> 还是 false。走一遍就知道为什么了。</p>
+  <p class="lead">这是面试最爱问的"现场题"。两个对象内容一模一样，<code class="i">equals</code> 返回 true，但放进 HashSet 却有两个；而且用一个<b>新建的等值对象</b>去 <code class="i">contains</code>，返回的还是 false。走一遍就知道为什么了。</p>
 
   <div class="stepper" data-stepper>
     <div class="stage">
