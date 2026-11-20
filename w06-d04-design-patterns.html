@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W06 · D4 · 设计模式</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --fuchsia:#e879f9; --fuchsia2:#f0abfc; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa; --rose:#fb7185; --amber:#f59e0b;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(232,121,249,.10),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(167,139,250,.09),transparent 62%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--fuchsia);color:#1a031e}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--fuchsia),var(--violet));box-shadow:0 0 14px rgba(232,121,249,.7)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--fuchsia);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--fuchsia);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--fuchsia)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--fuchsia);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(232,121,249,.12);
+  color:var(--fuchsia2);padding:1px 6px;border-radius:5px;border:1px solid rgba(232,121,249,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--fuchsia),#fbcfe8 45%,var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--fuchsia);font-weight:700}
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.chainv{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+.node{border:1px solid var(--line2);border-radius:10px;padding:9px 13px;background:var(--panel2);
+  font-family:var(--mono);font-size:11.5px;transition:.35s;text-align:center;line-height:1.5}
+.node b{display:block;color:var(--fuchsia);font-size:11px}
+.node small{color:var(--faint);font-size:10px}
+.node.on{border-color:var(--fuchsia);box-shadow:0 0 20px rgba(232,121,249,.22)}
+.node.ok{border-color:var(--green);background:rgba(61,220,151,.1)}
+.node.bad{border-color:var(--rose);background:rgba(251,113,133,.12)}
+.arw{color:var(--faint);font-size:13px}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--fuchsia2)}
+.ok{color:var(--green)}.no{color:var(--rose)}.mid{color:var(--amber)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(232,121,249,.38);background:rgba(232,121,249,.06)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--fuchsia);color:var(--fuchsia);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--fuchsia2);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:92px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav>
+  <span class="brand">W06 · D4</span>
+  <a href="#s1">别背 23 种</a>
+  <a href="#s2">单例</a>
+  <a href="#s3">工厂</a>
+  <a href="#s4">策略</a>
+  <a href="#s5">模板方法</a>
+  <a href="#s6">责任链</a>
+  <a href="#s7">代理与观察者</a>
+  <a href="#s8">Spring 对照</a>
+  <a href="#s9">自测</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 06 · DAY 04 · 12.28</p>
+  <h1>设计<em>模式</em></h1>
+  <p class="lead">不要背 23 种。面试和真实项目里高频的只有 <b>7 个</b>，而且每一个都能在 Spring 源码里找到对应实现。今天的目标是：<b>能用它们消除 if-else 和重复代码</b>。</p>
+  <div class="meta">
+    <span class="pill">W06 · D4</span>
+    <span class="pill">预计 <b>2.5 h</b></span>
+    <span class="pill">产出：<b>策略支付 + 校验链</b></span>
+  </div>
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>单例、工厂、策略、模板方法、责任链、代理与观察者</span></div>
+    <div class="kv"><b>02</b><span>用策略 + 工厂重构支付模块，用责任链实现订单校验</span></div>
+    <div class="kv"><b>03</b><span>结合 Spring 源码说明 5 个设计模式的实际应用</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / OVERVIEW</p>
+  <h2>只需要 7 个</h2>
+  <p class="lead">23 种是 GoF 的分类，但日常写业务代码真正会用到的就这几个。剩下的大多是框架层面的，理解即可。</p>
+
+  <table>
+    <tr><th>模式</th><th>一句话</th><th>解决的问题</th><th>Spring 里的例子</th></tr>
+    <tr><td><b>单例</b></td><td>全局只有一个实例</td><td>无状态对象重复创建、需要共享状态</td><td>所有 Bean 默认单例</td></tr>
+    <tr><td><b>工厂</b></td><td>把创建逻辑集中</td><td>调用方不该知道怎么 new</td><td>BeanFactory / FactoryBean</td></tr>
+    <tr><td><b>策略</b></td><td>同一行为的不同实现</td><td>消除 if-else / switch</td><td>Resource、PlatformTransactionManager</td></tr>
+    <tr><td><b>模板方法</b></td><td>父类定骨架，子类填步骤</td><td>固定流程 + 可变步骤</td><td>JdbcTemplate、AbstractApplicationContext</td></tr>
+    <tr><td><b>责任链</b></td><td>一个个处理，通过则往下</td><td>多步校验、过滤</td><td>Filter、HandlerInterceptor</td></tr>
+    <tr><td><b>代理</b></td><td>不直接访问目标，中间加一层</td><td>横切逻辑（日志、事务）</td><td>AOP（W05 D5 已讲）</td></tr>
+    <tr><td><b>观察者</b></td><td>状态变化通知订阅者</td><td>解耦"发生了什么"和"要做什么"</td><td>ApplicationEvent / Listener</td></tr>
+  </table>
+
+  <div class="card tip">
+    <h4>判断该不该用模式的标准</h4>
+    <p>不是"这里能用策略模式"，而是<b>"这里不用模式会不会疼"</b>。<br>
+    三个 if-else 分支，直接写最清楚；十个分支、每个月还在加，就该抽策略了。<b>模式是给变化准备的，不是给简单准备的。</b></p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / SINGLETON</p>
+  <h2>单例：五种写法，只有一种满分</h2>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 饿汉式：简单但可能浪费</b></p>
+        <pre style="margin:0"><span class="k">public class</span> <span class="t">Config</span> {
+    <span class="k">private static final</span> <span class="t">Config</span> INSTANCE = <span class="k">new</span> <span class="t">Config</span>();
+    <span class="k">private</span> <span class="t">Config</span>() {}
+    <span class="k">public static</span> <span class="t">Config</span> <span class="m">getInstance</span>() { <span class="k">return</span> INSTANCE; }
+}</pre>
+        <p class="anno">类加载时就创建。<b>线程安全（JVM 保证）</b>，但如果这个对象很重且不一定用得上，就浪费了。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 懒汉式：有并发 bug</b></p>
+        <pre style="margin:0"><span class="k">private static</span> <span class="t">Config</span> instance;
+<span class="k">public static</span> <span class="t">Config</span> <span class="m">getInstance</span>() {
+    <span class="k">if</span> (instance == <span class="k">null</span>) instance = <span class="k">new</span> <span class="t">Config</span>();   <span class="c">// ❌ 多线程下会创建多个</span>
+    <span class="k">return</span> instance;
+}</pre>
+        <p class="anno">加 <code class="i">synchronized</code> 能修好，但每次 getInstance 都要抢锁，性能差。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 双重检查锁（DCL）：必须加 volatile</b></p>
+        <pre style="margin:0"><span class="k">private static volatile</span> <span class="t">Config</span> instance;   <span class="c">// ★ volatile 不能省</span>
+<span class="k">public static</span> <span class="t">Config</span> <span class="m">getInstance</span>() {
+    <span class="k">if</span> (instance == <span class="k">null</span>) {
+        <span class="k">synchronized</span> (<span class="t">Config</span>.<span class="k">class</span>) {
+            <span class="k">if</span> (instance == <span class="k">null</span>) instance = <span class="k">new</span> <span class="t">Config</span>();
+        }
+    }
+    <span class="k">return</span> instance;
+}</pre>
+        <p style="color:var(--rose)"><b>为什么必须 volatile</b>：<code class="i">new</code> 分三步——① 分配内存 ② 初始化对象 ③ 引用指向内存。② 和 ③ 可能被指令重排，导致别的线程拿到<b>尚未初始化完成</b>的对象。volatile 禁止这个重排。</p>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 静态内部类：优雅的懒加载</b></p>
+        <pre style="margin:0"><span class="k">public class</span> <span class="t">Config</span> {
+    <span class="k">private</span> <span class="t">Config</span>() {}
+    <span class="k">private static class</span> <span class="t">Holder</span> {
+        <span class="k">private static final</span> <span class="t">Config</span> INSTANCE = <span class="k">new</span> <span class="t">Config</span>();
+    }
+    <span class="k">public static</span> <span class="t">Config</span> <span class="m">getInstance</span>() { <span class="k">return</span> <span class="t">Holder</span>.INSTANCE; }
+}</pre>
+        <p class="anno">利用 JVM 的类初始化机制：<b>Holder 类只在第一次调用 getInstance 时才加载</b>，加载时创建实例，由 JVM 保证线程安全。既懒加载、又无锁、又安全。</p>
+      </div>
+      <div data-step="5">
+        <p style="margin-top:0"><b>⑤ 枚举：唯一能防住反射和反序列化的写法</b></p>
+        <pre style="margin:0"><span class="k">public enum</span> <span class="t">Config</span> {
+    INSTANCE;
+    <span class="k">public void</span> <span class="m">load</span>() { ... }
+}</pre>
+        <p style="margin-top:10px">《Effective Java》推荐这种。原因：</p>
+        <div class="card warn" style="margin:8px 0 0">
+          <div class="kv"><b>防反射</b><span>Constructor.newInstance 遇到枚举会直接抛 IllegalArgumentException</span></div>
+          <div class="kv"><b>防反序列化</b><span>枚举反序列化走 valueOf，天然返回同一个实例，不会 new 新的</span></div>
+          <div class="kv"><b>线程安全</b><span>JVM 保证枚举实例的创建是线程安全的</span></div>
+          <div class="kv"><b>缺点</b><span>不能继承、写法略反直觉、不符合"类"的直觉</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 5</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / FACTORY</p>
+  <h2>工厂：三种，别混</h2>
+
+  <table>
+    <tr><th>类型</th><th>结构</th><th>什么时候用</th></tr>
+    <tr><td>简单工厂</td><td>一个方法 + switch 创建不同实现</td><td>产品少、变化少（严格说不算 GoF 模式）</td></tr>
+    <tr><td>工厂方法</td><td>每种产品一个工厂类</td><td>产品会持续增加，不想改已有代码</td></tr>
+    <tr><td>抽象工厂</td><td>一个工厂创建一族产品</td><td>产品有"系列"概念（如不同主题的 UI 组件）</td></tr>
+  </table>
+
+  <pre><span class="c">// 简单工厂：够用就好，别过度设计</span>
+<span class="k">public class</span> <span class="t">PayChannelFactory</span> {
+    <span class="k">public static</span> <span class="t">PayChannel</span> <span class="m">create</span>(<span class="t">String</span> type) {
+        <span class="k">return switch</span> (type) {
+            <span class="k">case</span> <span class="s">"alipay"</span> -&gt; <span class="k">new</span> <span class="t">AliPay</span>();
+            <span class="k">case</span> <span class="s">"wechat"</span> -&gt; <span class="k">new</span> <span class="t">WeChatPay</span>();
+            <span class="k">default</span> -&gt; <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.UNSUPPORTED_CHANNEL);
+        };
+    }
+}</pre>
+
+  <div class="card warn">
+    <h4>简单工厂的问题：加一个渠道就要改这个类</h4>
+    <p>违反开闭原则。但它<b>简单直观</b>，产品稳定时完全够用。<br>
+    真正要"新增不修改"时，才升级成"策略 + 注册表"（下一节），而 Spring 的 <code class="i">Map&lt;String, PayChannel&gt;</code> 注入就是这个模式的终极形态。</p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / STRATEGY</p>
+  <h2>策略：把 if-else 抽出去</h2>
+  <p class="lead">这是业务代码里性价比最高的一个模式。任务要求"用策略 + 工厂重构支付模块"，看下面这段演变。</p>
+
+  <div class="codecmp" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0">
+    <div class="card warn" style="margin:0">
+      <h4>重构前</h4>
+      <pre style="margin:8px 0 0"><span class="k">public void</span> <span class="m">pay</span>(<span class="t">Order</span> o, <span class="t">String</span> type) {
+    <span class="k">if</span> (<span class="s">"alipay"</span>.equals(type)) {
+        <span class="c">// 30 行支付宝逻辑</span>
+    } <span class="k">else if</span> (<span class="s">"wechat"</span>.equals(type)) {
+        <span class="c">// 30 行微信逻辑</span>
+    } <span class="k">else if</span> (<span class="s">"union"</span>.equals(type)) {
+        <span class="c">// 30 行银联逻辑</span>
+    } <span class="k">else</span> {
+        <span class="k">throw new</span> <span class="t">BizException</span>(<span class="s">"不支持的渠道"</span>);
+    }
+}</pre>
+    </div>
+    <div class="card tip" style="margin:0">
+      <h4>重构后</h4>
+      <pre style="margin:8px 0 0"><span class="k">public interface</span> <span class="t">PayChannel</span> {
+    <span class="t">String</span> <span class="m">type</span>();
+    <span class="k">void</span> <span class="m">pay</span>(<span class="t">Order</span> o);
+}
+
+<span class="k">public void</span> <span class="m">pay</span>(<span class="t">Order</span> o, <span class="t">String</span> type) {
+    <span class="t">PayChannel</span> c = channels.get(type);
+    <span class="k">if</span> (c == <span class="k">null</span>) <span class="k">throw new</span> <span class="t">BizException</span>(<span class="s">"不支持的渠道"</span>);
+    c.pay(o);
+}</pre>
+    </div>
+  </div>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 定义接口，每个渠道一个实现类</b></p>
+        <pre style="margin:0"><span class="k">@Component</span>
+<span class="k">public class</span> <span class="t">AliPay</span> <span class="k">implements</span> <span class="t">PayChannel</span> {
+    <span class="k">public</span> <span class="t">String</span> <span class="m">type</span>() { <span class="k">return</span> <span class="s">"alipay"</span>; }
+    <span class="k">public void</span> <span class="m">pay</span>(<span class="t">Order</span> o) { <span class="c">/* ... */</span> }
+}</pre>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② Spring 自动把同类型 Bean 注入成 Map</b></p>
+        <pre style="margin:0"><span class="k">@Service</span>
+<span class="k">public class</span> <span class="t">PayService</span> {
+    <span class="c">// key = bean 名字（aliPay / weChatPay），value = 实现</span>
+    <span class="k">private final</span> <span class="t">Map</span>&lt;<span class="t">String</span>, <span class="t">PayChannel</span>&gt; channels;
+
+    <span class="k">public</span> <span class="t">PayService</span>(<span class="t">List</span>&lt;<span class="t">PayChannel</span>&gt; list) {
+        <span class="k">this</span>.channels = list.stream()
+            .collect(<span class="t">Collectors</span>.toMap(<span class="t">PayChannel</span>::type, <span class="t">Function</span>.identity()));
+    }
+}</pre>
+        <p class="anno"><b>新增渠道 = 新增一个类</b>，不用改任何已有代码。<code class="i">@Component</code> 自动被扫到，Map 自动组装。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 调用方彻底干净</b></p>
+        <pre style="margin:0">payService.pay(order, <span class="s">"alipay"</span>);   <span class="c">// 没有一行 if-else</span></pre>
+        <p style="margin-top:10px;color:var(--fuchsia)"><b>这就是"策略 + 工厂 + 依赖注入"三合一的效果</b>，也是 Spring 项目里最常见的重构范式。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 3</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>什么时候<b>不要</b>用策略</h4>
+    <p>只有两三个分支、且大概率不会再增加时，抽成 3 个类 + 1 个接口反而更难看懂。<b>判断标准：这段 if-else 未来会不会长。</b></p>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / TEMPLATE</p>
+  <h2>模板方法：父类定骨架，子类填步骤</h2>
+  <p class="lead">适合"流程固定、个别步骤不同"的场景。JdbcTemplate 就是典型：连接、执行、关闭都由父类管，只有 SQL 和结果映射由你写。</p>
+
+  <pre><span class="k">public abstract class</span> <span class="t">AbstractOrderService</span> {
+
+    <span class="c">// ★ final：骨架不允许子类改</span>
+    <span class="k">public final</span> <span class="t">Order</span> <span class="m">create</span>(<span class="t">CreateCmd</span> cmd) {
+        <span class="m">validate</span>(cmd);              <span class="c">// 固定步骤</span>
+        <span class="t">Order</span> order = <span class="m">buildOrder</span>(cmd);  <span class="c">// 抽象方法，子类实现</span>
+        <span class="m">beforeSave</span>(order);          <span class="c">// 钩子，默认空实现</span>
+        <span class="m">save</span>(order);                <span class="c">// 固定步骤</span>
+        <span class="m">afterSave</span>(order);           <span class="c">// 钩子</span>
+        <span class="k">return</span> order;
+    }
+
+    <span class="k">protected abstract</span> <span class="t">Order</span> <span class="m">buildOrder</span>(<span class="t">CreateCmd</span> cmd);   <span class="c">// 必须实现</span>
+    <span class="k">protected void</span> <span class="m">beforeSave</span>(<span class="t">Order</span> o) { }                  <span class="c">// 钩子，可选</span>
+    <span class="k">protected void</span> <span class="m">afterSave</span>(<span class="t">Order</span> o) { }
+    <span class="k">private void</span> <span class="m">validate</span>(<span class="t">CreateCmd</span> cmd) { ... }              <span class="c">// 私有，子类看不到</span>
+    <span class="k">private void</span> <span class="m">save</span>(<span class="t">Order</span> o) { ... }
+}</pre>
+
+  <div class="grid2">
+    <div class="card soft" style="margin:0">
+      <h4>抽象方法 vs 钩子方法</h4>
+      <div class="kv"><b>抽象方法</b><span>子类<b>必须</b>实现，是流程中的关键可变点</span></div>
+      <div class="kv"><b>钩子方法</b><span>空实现，子类<b>按需</b>覆盖，用来插入扩展</span></div>
+    </div>
+    <div class="card soft" style="margin:0">
+      <h4>为什么骨架方法要 final</h4>
+      <p style="margin:6px 0 0;font-size:13px">防止子类重写整个流程，破坏"模板"的约束。<br>
+      Spring 的 <code class="i">JdbcTemplate.execute()</code>、<code class="i">AbstractApplicationContext.refresh()</code> 都是这个思路。</p>
+    </div>
+  </div>
+
+  <div class="card tip">
+    <h4>模板方法 vs 策略</h4>
+    <p><b>模板方法</b>用继承，父类控流程——适合"步骤顺序固定"。<br>
+    <b>策略</b>用组合，调用方选实现——适合"整段逻辑可替换"。<br>
+    现代设计更推荐组合（策略），因为继承耦合太强，但模板方法在框架里仍然大量存在。</p>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / CHAIN</p>
+  <h2>责任链：一个接一个，通过则继续</h2>
+  <p class="lead">任务要求"用责任链实现订单校验"。它的价值是：<b>每个校验规则独立、可插拔、可排序</b>。</p>
+
+  <pre><span class="k">public interface</span> <span class="t">OrderValidator</span> {
+    <span class="k">void</span> <span class="m">validate</span>(<span class="t">Order</span> order);   <span class="c">// 不通过就抛异常</span>
+}
+
+<span class="k">@Component</span> <span class="k">@Order</span>(<span class="n">1</span>)
+<span class="k">public class</span> <span class="t">StockValidator</span> <span class="k">implements</span> <span class="t">OrderValidator</span> {
+    <span class="k">public void</span> <span class="m">validate</span>(<span class="t">Order</span> o) {
+        <span class="k">if</span> (stock &lt; o.qty()) <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.STOCK_NOT_ENOUGH);
+    }
+}
+
+<span class="k">@Component</span> <span class="k">@Order</span>(<span class="n">2</span>)
+<span class="k">public class</span> <span class="t">AmountLimitValidator</span> <span class="k">implements</span> <span class="t">OrderValidator</span> { ... }
+
+<span class="c">// 由 Spring 收集所有实现，按 @Order 排序</span>
+<span class="k">@Service</span>
+<span class="k">public class</span> <span class="t">OrderService</span> {
+    <span class="k">private final</span> <span class="t">List</span>&lt;<span class="t">OrderValidator</span>&gt; validators;
+    <span class="k">public</span> <span class="t">OrderService</span>(<span class="t">List</span>&lt;<span class="t">OrderValidator</span>&gt; vs) { <span class="k">this</span>.validators = vs; }
+
+    <span class="k">public void</span> <span class="m">create</span>(<span class="t">Order</span> o) {
+        validators.forEach(v -&gt; v.<span class="m">validate</span>(o));   <span class="c">// 链式校验</span>
+    }
+}</pre>
+
+  <div class="card">
+    <h4>两种责任链实现</h4>
+    <div class="kv"><b>链表式</b><span>每个 handler 持有 next，自己能决定"是否继续"（如 Filter 可以 return 不往下走）</span></div>
+    <div class="kv"><b>列表式</b><span>由一个容器按顺序遍历，简单直接（上面这个例子）</span></div>
+    <p style="margin-top:10px"><b>Spring 的 Filter / Interceptor</b> 是链表式，因为需要支持"中断"。订单校验用列表式就够了。</p>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <p class="kicker">07 / PROXY &amp; OBSERVER</p>
+  <h2>代理与观察者：一个拦，一个通知</h2>
+
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h4>代理（W05 D5 已详讲）</h4>
+      <p style="margin:6px 0 10px;font-size:13px">在目标前后加逻辑，调用方无感知。</p>
+      <div class="kv"><b>静态代理</b><span>手写，一个类对一个类</span></div>
+      <div class="kv"><b>JDK 动态</b><span>只能代理接口</span></div>
+      <div class="kv"><b>CGLIB</b><span>生成子类，不能 final</span></div>
+      <p class="anno" style="margin-top:8px">Spring AOP、MyBatis Mapper、RPC 存根都是它。</p>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>观察者</h4>
+      <p style="margin:6px 0 10px;font-size:13px">发布事件，多个监听者各自处理，互不耦合。</p>
+      <pre style="margin:0"><span class="c">// 发布</span>
+publisher.publishEvent(<span class="k">new</span> <span class="t">OrderCreatedEvent</span>(order));
+
+<span class="c">// 订阅</span>
+<span class="k">@EventListener</span>
+<span class="k">public void</span> <span class="m">onCreated</span>(<span class="t">OrderCreatedEvent</span> e) {
+    <span class="c">// 发短信、加积分、发 MQ ...</span>
+}</pre>
+      <p class="anno" style="margin-top:8px">新增"下单后做什么"，只要加一个 Listener，订单服务不用改。</p>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>观察者的两个坑</h4>
+    <div class="kv"><b>① 默认同步执行</b><span>Listener 抛异常会影响主流程，慢会拖慢下单。需要异步要加 <code class="i">@Async</code> + 线程池</span></div>
+    <div class="kv"><b>② 事务边界</b><span>在事务提交前收到事件，此时数据可能还没提交，别的线程读不到。要用 <code class="i">@TransactionalEventListener(phase = AFTER_COMMIT)</code></span></div>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <p class="kicker">08 / SPRING</p>
+  <h2>Spring 里对应的 5 个</h2>
+  <p class="lead">面试问"你熟悉哪些设计模式"，最高分的答法是：<b>说出模式 + 说出 Spring 里哪个类用了它 + 说清为什么这么设计</b>。</p>
+
+  <table>
+    <tr><th>模式</th><th>Spring 中的实现</th><th>为什么这么设计</th></tr>
+    <tr><td>单例</td><td>Bean 默认 singleton 作用域</td><td>无状态 Bean 复用，省去反复创建；容器用三级缓存管理生命周期</td></tr>
+    <tr><td>工厂</td><td>BeanFactory / FactoryBean</td><td>把"创建对象"的复杂性（依赖注入、代理包装）从调用方剥离</td></tr>
+    <tr><td>模板方法</td><td>JdbcTemplate、AbstractApplicationContext.refresh()</td><td>固定"拿连接-执行-关闭"骨架，只把 SQL 和映射留给用户</td></tr>
+    <tr><td>策略</td><td>PlatformTransactionManager、Resource</td><td>同一接口不同实现（JDBC / JTA / 本地），运行时切换</td></tr>
+    <tr><td>代理</td><td>AOP 的 JDK / CGLIB 代理</td><td>横切逻辑（事务、日志）与业务解耦，业务代码不用感知</td></tr>
+    <tr><td>观察者</td><td>ApplicationEvent + @EventListener</td><td>把"下单成功"和"发短信/加积分"解耦</td></tr>
+    <tr><td>责任链</td><td>Filter、HandlerInterceptor</td><td>请求依次经过多个处理器，任一环节可以中断</td></tr>
+  </table>
+
+  <div class="card tip">
+    <h4>一个能直接用的回答模板</h4>
+    <p>"我最常用的是<b>策略模式</b>。比如支付模块，原来是一个几十行的 if-else，每加一个渠道都要改。后来抽成 <code class="i">PayChannel</code> 接口，每个渠道一个 <code class="i">@Component</code> 实现，用构造器注入 <code class="i">List&lt;PayChannel&gt;</code> 转成 Map。这样新增渠道只要加类，不用改已有代码——这就是开闭原则。Spring 里 <code class="i">PlatformTransactionManager</code> 也是同样的思路。"</p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <p class="kicker">09 / SELF CHECK</p>
+  <h2>今天的<em>自测</em></h2>
+
+  <details><summary>为什么 DCL 单例必须加 volatile？</summary>
+  <p>因为 <code>new</code> 由"分配内存 → 初始化 → 引用赋值"三步组成，后两步可能被指令重排。别的线程可能看到"引用已非空但对象未初始化完"的中间状态。volatile 禁止这个重排。</p></details>
+
+  <details><summary>静态内部类单例为什么线程安全？</summary>
+  <p>利用 JVM 类初始化机制：Holder 类只在首次调用 getInstance 时被加载，类初始化由 JVM 保证同步（<code class="i">&lt;clinit&gt;</code> 只会执行一次）。所以既懒加载又无锁。</p></details>
+
+  <details><summary>枚举单例为什么能防反射和反序列化？</summary>
+  <p>反射：Constructor.newInstance 对枚举类型直接抛异常；反序列化：枚举走 valueOf 而不是 new，天然返回同一个实例。</p></details>
+
+  <details><summary>简单工厂、工厂方法、抽象工厂的区别？</summary>
+  <p>简单工厂用一个方法根据参数创建产品（不是 GoF 模式）；工厂方法为每种产品定义独立工厂类，新增产品不改已有代码；抽象工厂创建一族相关产品（如不同主题的整套组件）。</p></details>
+
+  <details><summary>策略模式和 if-else 相比，好处在哪？</summary>
+  <p>① 符合开闭原则，新增分支不改已有代码；② 每个策略独立可测；③ 分支逻辑不再挤在一个方法里。代价是类变多，所以分支少且稳定时不必强上。</p></details>
+
+  <details><summary>Spring 怎么把多个实现注入成 Map？</summary>
+  <p>构造器注入 <code>Map&lt;String, PayChannel&gt;</code> 时，key 是 Bean 名字；注入 <code>List&lt;PayChannel&gt;</code> 时按 @Order 排序。也可以自己用 List 转 Map，key 用业务标识（如 type() 返回值）更稳妥。</p></details>
+
+  <details><summary>模板方法中"抽象方法"和"钩子方法"的区别？</summary>
+  <p>抽象方法必须由子类实现，是流程中的必需可变点；钩子方法是空实现，子类按需覆盖，用于插入可选的扩展。模板骨架方法通常声明为 final 防止被整体重写。</p></details>
+
+  <details><summary>责任链有哪些实现方式？</summary>
+  <p>链表式（每个 handler 持有 next，可决定是否继续，如 Filter）和列表式（容器遍历，简单直接）。需要"中断"能力用链表式，纯校验用列表式即可。</p></details>
+
+  <details><summary>@EventListener 有哪两个坑？</summary>
+  <p>① 默认同步执行，Listener 慢或抛异常会拖累主流程，需要 @Async 配线程池；② 在事务提交前触发，此时数据未提交，别的线程读不到，需要用 @TransactionalEventListener(phase = AFTER_COMMIT)。</p></details>
+
+  <details><summary>能说出 Spring 里 5 个设计模式的对应类吗？</summary>
+  <p>单例-Bean 作用域；工厂-BeanFactory/FactoryBean；模板方法-JdbcTemplate/AbstractApplicationContext.refresh()；策略-PlatformTransactionManager；代理-AOP 的 JDK/CGLIB；观察者-ApplicationEvent；责任链-Filter/HandlerInterceptor。</p></details>
+
+  <div class="card tip" style="margin-top:28px">
+    <h4>D4 完成标准（自我验收）</h4>
+    <ul>
+      <li>能默写 DCL 单例并解释 volatile 的作用</li>
+      <li>能说明枚举单例为什么最安全</li>
+      <li>能把一段 if-else 重构成"策略 + Map 注入"</li>
+      <li>能写模板方法的骨架 + 钩子</li>
+      <li>能用责任链实现订单校验并说清 @Order 的作用</li>
+      <li>能说出 Spring 里 5 个模式的对应类</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">全中 → 进 D5（字节码与代码质量）。</p>
+  </div>
+</section>
+
+<footer>W06 · D4 · 设计模式　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+  function render() {
+    items.forEach(el => el.classList.toggle('on', +el.dataset.step <= cur));
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } btnPlay.textContent = '▶ 播放'; }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => { if (cur >= max) { stop(); return; } go(cur + 1); }, 1600);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>

@@ -25,7 +25,7 @@ h1{font-size:clamp(26px,3.4vw,38px);margin:0 0 10px;letter-spacing:-.03em;line-h
 h1 b{background:linear-gradient(100deg,var(--amber),#fde68a 45%,#fb7185);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{color:var(--muted);margin:0 0 26px;font-size:14px;max-width:660px}
 .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin:0 0 8px}
-.bar i{display:block;height:100%;width:29%;border-radius:inherit;
+.bar i{display:block;height:100%;width:100%;border-radius:inherit;
   background:linear-gradient(90deg,var(--amber),#fb7185);box-shadow:0 0 18px rgba(245,158,11,.5)}
 .meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-bottom:34px}
 .list{display:flex;flex-direction:column;gap:10px}
@@ -57,7 +57,7 @@ footer{margin-top:36px;color:var(--faint);font-size:11.5px;text-align:center;fon
   <p class="sub">7 天 · 21 个任务 · 约 17.5 小时。从"会用集合"推进到"读过源码"，再补上 IO 模型与设计模式。周项目：高性能词频统计 + 策略支付。</p>
 
   <div class="bar"><i></i></div>
-  <div class="meta"><span>已完成 2 / 7 天</span><span>进度 29%</span></div>
+  <div class="meta"><span>已完成 7 / 7 天</span><span>进度 100%</span></div>
 
   <div class="list">
     <a class="row" href="w06-d01-hashmap-source.html">
@@ -78,50 +78,50 @@ footer{margin-top:36px;color:var(--faint);font-size:11.5px;text-align:center;fon
       <span class="tag">已就绪</span>
     </a>
 
-    <div class="row todo">
+    <a class="row" href="w06-d03-io-nio.html">
       <span class="num">D3</span>
       <span class="body">
         <span class="title">IO / NIO</span>
-        <span class="desc">BIO/NIO/AIO · Buffer/Channel/Selector · 零拷贝与序列化 · 多客户端聊天服务器</span>
+        <span class="desc">四象限（同步/异步 × 阻塞/非阻塞）· Buffer 四指针 · Selector 与 epoll · 零拷贝 4→2 次拷贝 · 半包粘包 · NIO 聊天服务器</span>
       </span>
-      <span class="tag">待生成</span>
-    </div>
+      <span class="tag">已就绪</span>
+    </a>
 
-    <div class="row todo">
+    <a class="row" href="w06-d04-design-patterns.html">
       <span class="num">D4</span>
       <span class="body">
         <span class="title">设计模式</span>
-        <span class="desc">单例、工厂、策略、模板方法、责任链、代理、观察者 · 结合 Spring 源码</span>
+        <span class="desc">单例五种写法 · 工厂三型 · 策略消除 if-else · 模板方法 · 责任链 · 代理与观察者 · Spring 五个对应实现</span>
       </span>
-      <span class="tag">待生成</span>
-    </div>
+      <span class="tag">已就绪</span>
+    </a>
 
-    <div class="row todo">
+    <a class="row" href="w06-d05-bytecode-quality.html">
       <span class="num">D5</span>
       <span class="body">
-        <span class="title">JVM 前置与代码质量</span>
-        <span class="desc">字节码 · 类加载直觉 · javap 分析 · SpotBugs/Checkstyle</span>
+        <span class="title">字节码与代码质量</span>
+        <span class="desc">class 十段结构 · javap 解读 · new/dup/invokespecial 三指令 · 五条 invoke · 三种常量池 · SpotBugs/Checkstyle 接入</span>
       </span>
-      <span class="tag">待生成</span>
-    </div>
+      <span class="tag">已就绪</span>
+    </a>
 
-    <div class="row todo">
+    <a class="row" href="w06-d06-project.html">
       <span class="num">D6</span>
       <span class="body">
         <span class="title">周项目：订单服务 v1</span>
-        <span class="desc">整合集合、异常、设计模式与单测 · 下单/取消/查询/支付策略 · 15 分钟 walkthrough</span>
+        <span class="desc">分层与模式落点 · 责任链校验 · 策略支付 · 词频统计三种写法 · 验收清单 · 15 分钟自述脚本</span>
       </span>
-      <span class="tag">待生成</span>
-    </div>
+      <span class="tag">已就绪</span>
+    </a>
 
-    <div class="row todo">
+    <a class="row" href="w06-d07-review.html">
       <span class="num">D7</span>
       <span class="body">
         <span class="title">周复盘</span>
-        <span class="desc">知识串联 · 自检表 · 10 道快问快答</span>
+        <span class="desc">七天知识串联 · 15 条自检 · 10 道快问快答 · W07 并发预告</span>
       </span>
-      <span class="tag">待生成</span>
-    </div>
+      <span class="tag">已就绪</span>
+    </a>
   </div>
 
   <div class="note">

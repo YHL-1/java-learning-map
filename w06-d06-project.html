@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W06 · D6 · 周项目：订单服务 v1</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --lime:#a3e635; --lime2:#d9f99d; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa; --rose:#fb7185; --amber:#f59e0b;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(163,230,53,.09),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(61,220,151,.08),transparent 62%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--lime);color:#101a02}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--lime),var(--green));box-shadow:0 0 14px rgba(163,230,53,.6)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--lime);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--lime);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--lime)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--lime);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(163,230,53,.13);
+  color:var(--lime2);padding:1px 6px;border-radius:5px;border:1px solid rgba(163,230,53,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--lime),#ecfccb 45%,var(--green));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--lime);font-weight:700}
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.tl{position:relative;margin:18px 0;padding-left:26px}
+.tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:var(--line2)}
+.tli{position:relative;padding:0 0 16px}
+.tli::before{content:"";position:absolute;left:-24px;top:7px;width:9px;height:9px;border-radius:50%;
+  background:var(--panel2);border:1px solid var(--line2);transition:.3s}
+.tli.on::before{background:var(--lime);border-color:var(--lime);box-shadow:0 0 12px rgba(163,230,53,.6)}
+.tli .tt{font-family:var(--mono);font-size:11px;color:var(--lime)}
+.tli .tc{font-size:13.5px;color:var(--text2);margin-top:2px}
+
+.chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.node{border:1px solid var(--line2);border-radius:9px;padding:8px 12px;background:var(--panel2);
+  font-family:var(--mono);font-size:11.5px;transition:.35s;text-align:center;line-height:1.5}
+.node b{display:block;color:var(--lime);font-size:11px}
+.node small{color:var(--faint);font-size:10px}
+.node.on{border-color:var(--lime);box-shadow:0 0 20px rgba(163,230,53,.2)}
+.node.ok{border-color:var(--green);background:rgba(61,220,151,.1)}
+.arw{color:var(--faint);font-size:13px}
+.check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.check:last-child{border:0}
+.check .bx{flex:0 0 auto;width:17px;height:17px;border-radius:5px;border:1px solid var(--line2);
+  margin-top:4px;display:grid;place-items:center;font-size:11px;color:var(--green)}
+.check.on .bx{border-color:var(--green);background:rgba(61,220,151,.15)}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--lime2)}
+.ok{color:var(--green)}.no{color:var(--rose)}.mid{color:var(--amber)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022)}
+details[open]{border-color:rgba(163,230,53,.38);background:rgba(163,230,53,.06)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--lime);color:var(--lime);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--lime2);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:92px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav>
+  <span class="brand">W06 · D6</span>
+  <a href="#s1">交付物</a>
+  <a href="#s2">架构</a>
+  <a href="#s3">订单服务</a>
+  <a href="#s4">词频统计</a>
+  <a href="#s5">验收</a>
+  <a href="#s6">项目自述</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 06 · DAY 06 · 12.30</p>
+  <h1>周项目：<em>订单服务 v1</em></h1>
+  <p class="lead">本周两个交付物：<b>订单服务 v1</b>（整合集合 + 异常 + 设计模式 + 单测）和<b>高性能词频统计</b>（HashMap 实战 + 并发版本）。目标不是功能多，而是<b>每个技术点都有出处</b>。</p>
+  <div class="meta">
+    <span class="pill">W06 · D6</span>
+    <span class="pill">预计 <b>3 h</b></span>
+    <span class="pill">验收：<b>15 分钟讲清楚</b></span>
+  </div>
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>整合集合、异常、设计模式与单测，完成可运行订单服务</span></div>
+    <div class="kv"><b>02</b><span>实现下单、取消、查询与支付策略，补齐日志和参数校验</span></div>
+    <div class="kv"><b>03</b><span>做一次 15 分钟项目 walkthrough，准备被追问的点</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / DELIVERABLES</p>
+  <h2>两个交付物，两套技术栈</h2>
+
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h4>① 订单服务 v1</h4>
+      <p style="margin:6px 0 10px;font-size:13px;color:var(--muted)">把 W05 的 CLI 升级成"有结构"的服务。</p>
+      <div class="kv"><b>功能</b><span>下单、取消、查询、支付（多策略）</span></div>
+      <div class="kv"><b>重点</b><span>责任链校验、策略支付、统一异常、单测覆盖</span></div>
+      <div class="kv"><b>用到的</b><span>D4 设计模式 + W05 异常/集合</span></div>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>② 高性能词频统计</h4>
+      <p style="margin:6px 0 10px;font-size:13px;color:var(--muted)">D1/D2 的集合源码直接落地。</p>
+      <div class="kv"><b>功能</b><span>读文件 → 分词 → 统计词频 → 输出 Top-N</span></div>
+      <div class="kv"><b>重点</b><span>单线程 vs 并发、容量预估、Top-N 堆</span></div>
+      <div class="kv"><b>用到的</b><span>D1 HashMap + D2 CHM + D3 NIO</span></div>
+    </div>
+  </div>
+
+  <div class="card tip">
+    <h4>为什么是这两个项目</h4>
+    <p>它们正好覆盖本周三条主线：<b>集合源码</b>（词频统计）、<b>IO</b>（读文件）、<b>设计模式</b>（订单服务）。<br>
+    而且两个都能在 15 分钟内讲清楚，不需要数据库和前端。</p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / ARCHITECTURE</p>
+  <h2>订单服务：分层与模式落点</h2>
+
+  <pre>order-service/
+├── domain/                       <span class="c">// 不依赖框架</span>
+│   ├── Order.java                <span class="c">// 聚合根</span>
+│   ├── OrderItem.java
+│   ├── Money.java                <span class="c">// 值对象（W05 D2）</span>
+│   ├── OrderStatus.java
+│   └── BizException.java
+├── repo/
+│   ├── OrderRepository.java      <span class="c">// 接口</span>
+│   └── InMemoryOrderRepo.java    <span class="c">// 内部用 ConcurrentHashMap（D2）</span>
+├── validator/                    <span class="c">// ★ 责任链（D4）</span>
+│   ├── OrderValidator.java
+│   ├── StockValidator.java
+│   └── AmountLimitValidator.java
+├── pay/                          <span class="c">// ★ 策略（D4）</span>
+│   ├── PayChannel.java
+│   ├── AliPay.java
+│   └── WeChatPay.java
+└── service/
+    └── OrderService.java         <span class="c">// 编排</span></pre>
+
+  <div class="card">
+    <h4>三个模式，三个落点</h4>
+    <div class="kv"><b>责任链</b><span><code class="i">validator/</code>：每个校验规则一个类，按 <code class="i">@Order</code> 排序执行</span></div>
+    <div class="kv"><b>策略</b><span><code class="i">pay/</code>：每个支付渠道一个实现，用 Map 注册表分发</span></div>
+    <div class="kv"><b>单例</b><span><code class="i">InMemoryOrderRepo</code>：全局唯一的数据存储（Spring 下就是默认 singleton Bean）</span></div>
+  </div>
+
+  <div class="card warn">
+    <h4>一个容易做错的设计</h4>
+    <p>不要把校验逻辑写进 <code class="i">OrderService.create()</code> 里，那样又变回一坨 if-else。<br>
+    正确的做法：<b>Service 只负责"编排"</b>——调校验链、算金额、存库、发事件；具体规则全部在 validator 里。</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / CODE</p>
+  <h2>核心代码：编排 + 校验链 + 策略</h2>
+
+  <pre><span class="k">@Service</span>
+<span class="k">public class</span> <span class="t">OrderService</span> {
+    <span class="k">private final</span> <span class="t">OrderRepository</span> repo;
+    <span class="k">private final</span> <span class="t">List</span>&lt;<span class="t">OrderValidator</span>&gt; validators;   <span class="c">// 责任链</span>
+    <span class="k">private final</span> <span class="t">Map</span>&lt;<span class="t">String</span>, <span class="t">PayChannel</span>&gt; channels;     <span class="c">// 策略表</span>
+
+    <span class="k">public</span> <span class="t">OrderService</span>(<span class="t">OrderRepository</span> repo,
+                         <span class="t">List</span>&lt;<span class="t">OrderValidator</span>&gt; validators,
+                         <span class="t">List</span>&lt;<span class="t">PayChannel</span>&gt; channels) {
+        <span class="k">this</span>.repo = repo;
+        <span class="k">this</span>.validators = validators;
+        <span class="k">this</span>.channels = channels.stream()
+            .collect(<span class="t">Collectors</span>.toMap(<span class="t">PayChannel</span>::type, <span class="t">Function</span>.identity()));
+    }
+
+    <span class="k">public</span> <span class="t">Order</span> <span class="m">create</span>(<span class="t">CreateCmd</span> cmd) {
+        <span class="c">// 1. 校验（责任链）：任一不通过就抛异常，中断后续</span>
+        validators.forEach(v -&gt; v.<span class="m">validate</span>(cmd));
+
+        <span class="c">// 2. 构建领域对象</span>
+        <span class="t">Order</span> order = <span class="t">Order</span>.<span class="m">create</span>(cmd.userId());
+        cmd.items().forEach(order::addItem);
+
+        <span class="c">// 3. 落库</span>
+        repo.save(order);
+        log.info(<span class="s">"订单创建成功 id={} amount={}"</span>, order.id(), order.total());
+        <span class="k">return</span> order;
+    }
+
+    <span class="k">public void</span> <span class="m">pay</span>(<span class="t">String</span> orderId, <span class="t">String</span> channelType) {
+        <span class="t">Order</span> order = repo.findById(orderId)
+            .orElseThrow(() -&gt; <span class="k">new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.ORDER_NOT_FOUND));
+
+        <span class="t">PayChannel</span> channel = channels.get(channelType);
+        <span class="k">if</span> (channel == <span class="k">null</span>) <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.UNSUPPORTED_CHANNEL);
+
+        channel.pay(order);        <span class="c">// 多态：不同渠道不同实现</span>
+        order.markPaid();
+        repo.save(order);
+    }
+
+    <span class="k">public void</span> <span class="m">cancel</span>(<span class="t">String</span> orderId) {
+        <span class="t">Order</span> order = repo.findById(orderId)
+            .orElseThrow(() -&gt; <span class="k">new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.ORDER_NOT_FOUND));
+        <span class="k">if</span> (order.status() == <span class="t">OrderStatus</span>.PAID)
+            <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.ORDER_CANNOT_CANCEL);
+        order.markCancelled();
+        repo.save(order);
+    }
+}</pre>
+
+  <h3>一个校验器长什么样</h3>
+  <pre><span class="k">@Component</span>
+<span class="k">@Order</span>(<span class="n">10</span>)                        <span class="c">// 数字越小越先执行</span>
+<span class="k">public class</span> <span class="t">StockValidator</span> <span class="k">implements</span> <span class="t">OrderValidator</span> {
+    <span class="k">private final</span> <span class="t">StockService</span> stock;
+
+    <span class="k">public void</span> <span class="m">validate</span>(<span class="t">CreateCmd</span> cmd) {
+        <span class="k">for</span> (<span class="t">Item</span> it : cmd.items()) {
+            <span class="k">int</span> left = stock.<span class="m">available</span>(it.sku());
+            <span class="k">if</span> (left &lt; it.qty())
+                <span class="k">throw new</span> <span class="t">BizException</span>(<span class="t">ErrorCode</span>.STOCK_NOT_ENOUGH,
+                        <span class="s">"SKU "</span> + it.sku() + <span class="s">" 剩余 "</span> + left);
+        }
+    }
+}</pre>
+
+  <div class="card tip">
+    <h4>这样写的好处（面试可以讲）</h4>
+    <ul style="margin:6px 0 0">
+      <li>新增校验规则 → 只加一个类，<b>不改 OrderService</b></li>
+      <li>每条规则可单测，不需要构造整个服务</li>
+      <li>执行顺序由 <code class="i">@Order</code> 声明，一眼能看出"先校验什么"</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / WORD COUNT</p>
+  <h2>词频统计：三种写法</h2>
+  <p class="lead">这是 D1/D2 的直接应用。重点不是"能不能跑"，而是<b>能不能说出为什么选这个</b>。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 最朴素：HashMap 计数</b></p>
+        <pre style="margin:0"><span class="t">Map</span>&lt;<span class="t">String</span>, <span class="t">Integer</span>&gt; map = <span class="k">new</span> <span class="t">HashMap</span>&lt;&gt;();
+<span class="k">for</span> (<span class="t">String</span> w : words) {
+    map.merge(w, <span class="n">1</span>, <span class="t">Integer</span>::sum);   <span class="c">// 或 computeIfAbsent + ++</span>
+}</pre>
+        <p class="anno"><code class="i">merge</code> 比 <code class="i">get + null 判断 + put</code> 少一次查表，且语义清晰。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 容量预估：省掉全部扩容</b></p>
+        <pre style="margin:0"><span class="k">int</span> expected = estimateDistinctWords(totalWords);
+<span class="t">Map</span>&lt;<span class="t">String</span>, <span class="t">Integer</span>&gt; map =
+        <span class="k">new</span> <span class="t">HashMap</span>&lt;&gt;((<span class="k">int</span>) (expected / <span class="n">0.75f</span>) + <span class="n">1</span>);</pre>
+        <p class="anno">这是 D1 的 JMH 实验结论的直接应用。文本越大，收益越明显。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 并发版本：CHM + 原子累加</b></p>
+        <pre style="margin:0"><span class="t">ConcurrentHashMap</span>&lt;<span class="t">String</span>, <span class="t">LongAdder</span>&gt; map = <span class="k">new</span> <span class="t">ConcurrentHashMap</span>&lt;&gt;();
+map.computeIfAbsent(w, k -&gt; <span class="k">new</span> <span class="t">LongAdder</span>()).increment();
+
+<span class="c">// 为什么用 LongAdder 而不是 AtomicLong：</span>
+<span class="c">// 单词计数是高频写热点，LongAdder 分段累加，冲突少得多</span></pre>
+        <p class="anno">多线程读同一文件时，按行分片并行处理，最后合并。</p>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ Top-N：小顶堆（D3 讲过）</b></p>
+        <pre style="margin:0"><span class="t">PriorityQueue</span>&lt;<span class="t">Map</span>.<span class="t">Entry</span>&lt;<span class="t">String</span>, <span class="t">LongAdder</span>&gt;&gt; heap =
+    <span class="k">new</span> <span class="t">PriorityQueue</span>&lt;&gt;(N, <span class="t">Comparator</span>.comparingLong(e -&gt; e.getValue().sum()));
+
+<span class="k">for</span> (<span class="k">var</span> e : map.entrySet()) {
+    heap.offer(e);
+    <span class="k">if</span> (heap.size() &gt; N) heap.poll();
+}</pre>
+        <p style="margin-top:10px;color:var(--lime)"><b>完整链路</b>：NIO 读文件 → 分词 → HashMap/CHM 计数 → 小顶堆 Top-N。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>并行版本不一定更快</h4>
+    <p>如果瓶颈在磁盘 IO（读文件），多线程分词帮不上忙，反而多一层合并开销。<br>
+    正确的测法：<b>先用单线程跑一遍计时</b>，确认时间花在 CPU（分词）还是 IO 上，再决定要不要并行。这个"先测量再优化"的思路，比代码本身更值钱。</p>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / ACCEPTANCE</p>
+  <h2>验收清单</h2>
+
+  <div class="card">
+    <div class="check on"><span class="bx">✓</span><span><b>可运行</b>：一条命令启动，不需要改代码</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>校验完整</b>：库存不足、金额超限、订单不存在、状态非法，全部抛业务异常</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>支付可扩展</b>：新增渠道只需加实现类，OrderService 不改</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>金额正确</b>：全程 BigDecimal，scale=2，compareTo 比较</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>并发安全</b>：仓储用 ConcurrentHashMap，不出现计数错乱</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>有单测</b>：至少 5 个——下单成功、库存不足、重复支付、取消已支付、金额计算</span></div>
+    <div class="check on"><span class="bx">✓</span><span><b>词频统计</b>：能跑 100MB 文本，输出 Top-10 且耗时可解释</span></div>
+  </div>
+
+  <h3>单测示例</h3>
+  <pre><span class="k">@Test</span>
+<span class="k">void</span> <span class="m">paidOrderCannotCancel</span>() {
+    <span class="t">OrderRepository</span> repo = mock(<span class="t">OrderRepository</span>.<span class="k">class</span>);
+    <span class="t">Order</span> paid = <span class="t">Order</span>.<span class="m">create</span>(<span class="n">1L</span>);
+    paid.markPaid();
+    when(repo.findById(<span class="s">"O1"</span>)).thenReturn(<span class="t">Optional</span>.of(paid));
+
+    <span class="t">OrderService</span> svc = <span class="k">new</span> <span class="t">OrderService</span>(repo, <span class="t">List</span>.of(), <span class="t">List</span>.of());
+
+    <span class="t">BizException</span> ex = assertThrows(<span class="t">BizException</span>.<span class="k">class</span>, () -&gt; svc.cancel(<span class="s">"O1"</span>));
+    assertEquals(<span class="t">ErrorCode</span>.ORDER_CANNOT_CANCEL, ex.getErrorCode());
+}</pre>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / WALKTHROUGH</p>
+  <h2>15 分钟自述脚本</h2>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <div class="tl">
+          <div class="tli on"><div class="tt">0:00 – 2:00　一句话定位</div>
+            <div class="tc">"这是一个订单服务，练习目标是把集合源码、设计模式和异常处理串起来。功能不复杂，但每一层都能讲出为什么这么写。"</div></div>
+        </div>
+      </div>
+      <div data-step="2">
+        <div class="tl">
+          <div class="tli on"><div class="tt">2:00 – 5:00　分层</div>
+            <div class="tc">"分四层：domain 不依赖框架、repo 抽接口、service 只做编排、validator 和 pay 是插件。加规则加渠道都不用改 service。"</div></div>
+        </div>
+      </div>
+      <div data-step="3">
+        <div class="tl">
+          <div class="tli on"><div class="tt">5:00 – 9:00　两个技术点深挖</div>
+            <div class="tc">"校验用责任链，Spring 自动收集 <code>List&lt;OrderValidator&gt;</code> 并按 @Order 排序——原来一个 80 行的 create 方法拆成了 3 个可单测的类。"<br>
+            "支付用策略 + Map 注册表，新增渠道只加一个 @Component，调用方一行 if-else 都没有。"</div></div>
+        </div>
+      </div>
+      <div data-step="4">
+        <div class="tl">
+          <div class="tli on"><div class="tt">9:00 – 12:00　一个坑</div>
+            <div class="tc">"仓储一开始用 HashMap，压测时并行下单出现了数据丢失。换成 ConcurrentHashMap 后解决，也理解了 D1 讲的 JDK 7 成环和 JDK 8 丢数据其实是两个问题。"</div></div>
+        </div>
+      </div>
+      <div data-step="5">
+        <div class="tl">
+          <div class="tli on"><div class="tt">12:00 – 15:00　测试与下一步</div>
+            <div class="tc">"5 个单测覆盖了下单、库存、重复支付、取消、金额。下一步想换成 JPA 实现，再加集成测试。"</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 5</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>准备三个"被追问"的答案</h4>
+    <div class="kv"><b>为什么不用数据库</b><span>"练习重点是设计模式和数据结构的运用，换存储只需换 repo 实现，service 一行不改"</span></div>
+    <div class="kv"><b>并发下会不会有问题</b><span>"仓储用 CHM，但订单状态流转还有竞态——真实场景要用乐观锁（version 字段）或按 orderId 加锁"</span></div>
+    <div class="kv"><b>这个项目有什么不足</b><span>"没有事务边界，支付失败后的回滚没做；也没有幂等设计。这两点是下一步"</span></div>
+  </div>
+</section>
+
+<footer>W06 · D6 · 周项目：订单服务 v1　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+  function render() {
+    items.forEach(el => el.classList.toggle('on', +el.dataset.step <= cur));
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } btnPlay.textContent = '▶ 播放'; }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => { if (cur >= max) { stop(); return; } go(cur + 1); }, 1600);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>

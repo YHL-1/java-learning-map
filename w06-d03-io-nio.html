@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W06 · D3 · IO 与 NIO</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --sky:#38bdf8; --sky2:#7dd3fc; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa; --rose:#fb7185; --amber:#f59e0b;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(56,189,248,.10),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(34,211,238,.08),transparent 62%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--sky);color:#02121e}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--sky),var(--cyan));box-shadow:0 0 14px rgba(56,189,248,.7)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--sky);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--sky);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--sky)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--sky);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(56,189,248,.12);
+  color:var(--sky2);padding:1px 6px;border-radius:5px;border:1px solid rgba(56,189,248,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--sky),#bae6fd 45%,var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--sky);font-weight:700}
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* quad */
+.quad{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.q{border:1px solid var(--line2);border-radius:14px;padding:14px 16px;background:var(--panel2);transition:.3s}
+.q .qh{font-family:var(--mono);font-size:12px;margin-bottom:6px;color:var(--sky)}
+.q .qd{font-size:12.5px;color:var(--muted);line-height:1.65}
+.q.on{border-color:var(--sky);box-shadow:0 0 26px rgba(56,189,248,.2)}
+.q.dim{opacity:.35}
+
+/* buffer */
+.buf{display:flex;gap:3px;margin:14px 0}
+.bcell{width:46px;height:44px;border:1px solid var(--line);border-radius:7px;display:grid;
+  place-items:center;font-family:var(--mono);font-size:12px;color:var(--faint);transition:.35s;
+  background:rgba(255,255,255,.02);position:relative}
+.bcell.written{border-color:var(--sky);background:rgba(56,189,248,.15);color:var(--sky)}
+.bcell.read{border-color:var(--green);background:rgba(61,220,151,.14);color:var(--green)}
+.bcell.edge{border-color:var(--rose);box-shadow:0 0 14px rgba(251,113,133,.25)}
+.ptrs{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;margin:10px 0}
+.ptrs span{color:var(--muted)}
+.ptrs b{color:var(--sky);font-weight:700}
+
+/* copy layers */
+.layers{margin:16px 0}
+.layer{display:flex;align-items:center;gap:12px;margin:8px 0;padding:10px 14px;border-radius:10px;
+  border:1px solid var(--line);background:rgba(255,255,255,.02);font-size:13px}
+.layer .lname{font-family:var(--mono);font-size:11.5px;color:var(--sky);min-width:104px}
+.layer .ldesc{color:var(--text2);font-size:12.5px}
+.layer.hot{border-color:var(--rose);background:rgba(251,113,133,.08)}
+.layer.cool{border-color:var(--green);background:rgba(61,220,151,.08)}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--sky2)}
+.ok{color:var(--green)}.no{color:var(--rose)}.mid{color:var(--amber)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(56,189,248,.38);background:rgba(56,189,248,.06)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--sky);color:var(--sky);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--sky2);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:92px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){.grid2,.quad{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav>
+  <span class="brand">W06 · D3</span>
+  <a href="#s1">四象限</a>
+  <a href="#s2">BIO 的问题</a>
+  <a href="#s3">NIO 三件套</a>
+  <a href="#s4">Buffer 指针</a>
+  <a href="#s5">Selector</a>
+  <a href="#s6">零拷贝</a>
+  <a href="#s7">序列化</a>
+  <a href="#s8">聊天服务器</a>
+  <a href="#s9">自测</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 06 · DAY 03 · 12.27</p>
+  <h1>IO 与 <em>NIO</em></h1>
+  <p class="lead">这一天的核心不是 API，而是<b>两张图</b>：四象限（同步/异步 × 阻塞/非阻塞）和零拷贝的数据流转。能把这两张图画出来，IO 这块就通了。</p>
+  <div class="meta">
+    <span class="pill">W06 · D3</span>
+    <span class="pill">预计 <b>2.5 h</b></span>
+    <span class="pill">产出：<b>NIO 聊天服务器</b></span>
+  </div>
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>BIO/NIO/AIO、Buffer/Channel/Selector、零拷贝与序列化</span></div>
+    <div class="kv"><b>02</b><span>用 NIO 写一个多客户端聊天服务器，比较阻塞与非阻塞实现</span></div>
+    <div class="kv"><b>03</b><span>画图讲 BIO/NIO/AIO，解释零拷贝</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / MATRIX</p>
+  <h2>四象限：别再混着说</h2>
+  <p class="lead">BIO / NIO / AIO 这三个词经常被混用。准确的说法是<b>两个维度</b>的组合：谁在等（阻塞与否）、谁在通知（同步还是异步）。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 两个维度先分清</b></p>
+        <div class="grid2">
+          <div class="card soft" style="margin:0">
+            <h4>阻塞 / 非阻塞</h4>
+            <p style="margin:6px 0 0;font-size:13px">说的是<b>调用方</b>：发起 IO 后，线程要不要在那儿干等。</p>
+          </div>
+          <div class="card soft" style="margin:0">
+            <h4>同步 / 异步</h4>
+            <p style="margin:6px 0 0;font-size:13px">说的是<b>数据搬运</b>：谁把数据从内核拷到用户缓冲区。</p>
+          </div>
+        </div>
+        <p class="anno">关键：<b>非阻塞 ≠ 异步</b>。NIO 是非阻塞 + 同步（数据拷贝还得你自己做）。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 四个格子</b></p>
+        <div class="quad">
+          <div class="q on">
+            <div class="qh">同步 + 阻塞 = BIO</div>
+            <div class="qd">线程发起 read 后卡住，直到数据到达并拷完。<br>一连接一线程。</div>
+          </div>
+          <div class="q on">
+            <div class="qh">同步 + 非阻塞 = NIO</div>
+            <div class="qd">read 立即返回（可能没数据），靠 Selector 轮询就绪事件，再由线程去拷贝。<br>一线程管多连接。</div>
+          </div>
+          <div class="q dim">
+            <div class="qh">异步 + 阻塞</div>
+            <div class="qd">逻辑上不存在（异步的意义就是不等）。</div>
+          </div>
+          <div class="q dim">
+            <div class="qh">异步 + 非阻塞 = AIO</div>
+            <div class="qd">发起 read 就返回，内核拷完数据后回调你。<br>Java 7 引入，实际用得少。</div>
+          </div>
+        </div>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ 用"去餐厅吃饭"记住</b></p>
+        <div class="card soft" style="margin:8px 0 0">
+          <div class="kv"><b>BIO</b><span>点完菜站在出菜口等，菜好了自己端——<b>你一直站着（阻塞），菜要自己端（同步）</b></span></div>
+          <div class="kv"><b>NIO</b><span>点完菜回座位刷手机，服务员喊"好了"你再去端——<b>不用一直等（非阻塞），但还是自己端（同步）</b></span></div>
+          <div class="kv"><b>AIO</b><span>点完菜回座位，服务员直接把菜送到桌上——<b>不用等，也不用自己端（异步）</b></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 3</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>最容易被扣分的说法</h4>
+    <p>❌ "NIO 就是非阻塞 IO" —— 不全对，NIO 的 N 官方解释是 <b>New IO</b>（后来也叫 Non-blocking IO），它的核心贡献是 <b>Selector 多路复用</b>，而不只是"非阻塞"。<br>
+    ❌ "AIO 比 NIO 快" —— 不一定。AIO 只是编程模型不同，Linux 上真正的异步 IO（io_uring）普及很晚，Java AIO 在 Linux 上长期是用 epoll 模拟的。</p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / BIO</p>
+  <h2>BIO 的问题：C10K</h2>
+  <p class="lead">BIO 的模型是"一个连接一个线程"。连接数一上来，线程就爆了——这是所有高并发服务器的历史起点。</p>
+
+  <pre><span class="c">// 最朴素的 BIO 服务器</span>
+<span class="t">ServerSocket</span> server = <span class="k">new</span> <span class="t">ServerSocket</span>(<span class="n">8080</span>);
+<span class="k">while</span> (<span class="k">true</span>) {
+    <span class="t">Socket</span> socket = server.accept();          <span class="c">// 阻塞：没连接就一直等</span>
+    <span class="k">new</span> <span class="t">Thread</span>(() -&gt; {
+        <span class="t">InputStream</span> in = socket.getInputStream();
+        <span class="k">byte</span>[] buf = <span class="k">new byte</span>[<span class="n">1024</span>];
+        <span class="k">while</span> ((len = in.read(buf)) != -<span class="n">1</span>) {   <span class="c">// 阻塞：没数据就一直等</span>
+            <span class="c">// 处理</span>
+        }
+    }).start();
+}</pre>
+
+  <div class="card">
+    <h4>为什么撑不住 1 万个连接</h4>
+    <div class="kv"><b>线程开销</b><span>每个线程默认栈 1MB，1 万线程 = 10GB 虚拟内存（虽然可调，但仍很重）</span></div>
+    <div class="kv"><b>上下文切换</b><span>线程一多，CPU 大量时间花在切换而不是干活</span></div>
+    <div class="kv"><b>绝大多数线程在空等</b><span>1 万个连接里可能只有几十个活跃，其余全卡在 read 上</span></div>
+    <div class="kv"><b>线程池也救不了</b><span>池子里的线程被长时间阻塞占用，新连接排队</span></div>
+  </div>
+
+  <div class="card tip">
+    <h4>但 BIO 也有它的位置</h4>
+    <p>连接数少（几十）、逻辑简单、追求开发效率时，BIO + 线程池完全够用。<b>Tomcat 的 BIO 连接器</b>曾经就是默认配置，直到连接数上来了才换成 NIO。</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / NIO</p>
+  <h2>三件套：Buffer / Channel / Selector</h2>
+  <p class="lead">记住一句话：<b>Channel 是管道，Buffer 是容器，Selector 是调度台</b>。数据永远是"读进 Buffer、从 Buffer 写出"。</p>
+
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h4>Channel · 双向管道</h4>
+      <p style="margin:6px 0 0;font-size:13px">和 Stream 最大的区别：<b>Channel 是双向的</b>，一个通道既能读也能写；Stream 只能单向。</p>
+      <div class="kv" style="margin-top:10px"><b>FileChannel</b><span>文件，支持 transferTo（零拷贝）</span></div>
+      <div class="kv"><b>SocketChannel</b><span>TCP 客户端</span></div>
+      <div class="kv"><b>ServerSocketChannel</b><span>TCP 服务端</span></div>
+      <div class="kv"><b>DatagramChannel</b><span>UDP</span></div>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>Buffer · 数据容器</h4>
+      <p style="margin:6px 0 0;font-size:13px">本质是一块内存 + <b>四个指针</b>。所有 NIO 的"坑"几乎都出在指针上。</p>
+      <div class="kv" style="margin-top:10px"><b>ByteBuffer</b><span>最常用，其余是视图</span></div>
+      <div class="kv"><b>堆内/堆外</b><span>allocate vs allocateDirect</span></div>
+      <div class="kv"><b>视图</b><span>asIntBuffer / asCharBuffer</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>读写流程（背下来）</h4>
+    <pre style="margin:8px 0 0"><span class="c">// 写：数据 → Buffer → Channel</span>
+buffer.put(data);
+buffer.<span class="m">flip</span>();            <span class="c">// ★ 切换到读模式</span>
+channel.write(buffer);
+
+<span class="c">// 读：Channel → Buffer → 取数据</span>
+buffer.<span class="m">clear</span>();           <span class="c">// 清空，准备写</span>
+channel.read(buffer);
+buffer.flip();
+<span class="k">while</span> (buffer.hasRemaining()) process(buffer.get());</pre>
+    <p class="anno">忘记 <code class="i">flip()</code> 是最常见的 bug——写完直接读，position 停在末尾，读出来是空的。</p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / BUFFER</p>
+  <h2>四个指针：position / limit / capacity / mark</h2>
+  <p class="lead">Buffer 本质就是"一个数组 + 三个游标 + 一个书签"。搞懂 <code class="i">flip</code> 到底改了什么，NIO 就没那么玄了。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 新建：capacity=8，position=0，limit=8（写模式）</b></p>
+        <div class="buf">
+          <div class="bcell">·</div><div class="bcell">·</div><div class="bcell">·</div><div class="bcell">·</div>
+          <div class="bcell">·</div><div class="bcell">·</div><div class="bcell">·</div><div class="bcell">·</div>
+        </div>
+        <div class="ptrs"><span>position=<b>0</b></span><span>limit=<b>8</b></span><span>capacity=<b>8</b></span></div>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② 写入 5 个字节：position 前进到 5</b></p>
+        <div class="buf">
+          <div class="bcell written">A</div><div class="bcell written">B</div><div class="bcell written">C</div>
+          <div class="bcell written">D</div><div class="bcell written">E</div>
+          <div class="bcell edge">·</div><div class="bcell">·</div><div class="bcell">·</div>
+        </div>
+        <div class="ptrs"><span>position=<b>5</b></span><span>limit=<b>8</b></span><span>capacity=<b>8</b></span></div>
+        <p class="anno">此时如果直接 <code class="i">get()</code>，读的是下标 5，没有数据。</p>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ <code class="i">flip()</code>：limit=position，position=0</b></p>
+        <div class="buf">
+          <div class="bcell read">A</div><div class="bcell read">B</div><div class="bcell read">C</div>
+          <div class="bcell read">D</div><div class="bcell read">E</div>
+          <div class="bcell edge">·</div><div class="bcell">·</div><div class="bcell">·</div>
+        </div>
+        <div class="ptrs"><span>position=<b>0</b></span><span>limit=<b>5</b></span><span>capacity=<b>8</b></span></div>
+        <p style="color:var(--sky)"><b>flip 只做了两件事</b>：把 limit 移到 position（数据边界），把 position 归零（从头读）。</p>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ 读走 3 个：position 到 3</b></p>
+        <div class="buf">
+          <div class="bcell">A</div><div class="bcell">B</div><div class="bcell">C</div>
+          <div class="bcell read">D</div><div class="bcell read">E</div>
+          <div class="bcell edge">·</div><div class="bcell">·</div><div class="bcell">·</div>
+        </div>
+        <div class="ptrs"><span>position=<b>3</b></span><span>limit=<b>5</b></span><span>capacity=<b>8</b></span></div>
+      </div>
+
+      <div data-step="5">
+        <p style="margin-top:0"><b>⑤ <code class="i">clear()</code> vs <code class="i">compact()</code></b></p>
+        <div class="grid2">
+          <div class="card soft" style="margin:0">
+            <h4>clear()</h4>
+            <pre style="margin:6px 0 0">position = 0
+limit = capacity</pre>
+            <p class="anno" style="margin-top:8px">数据没删，只是指针重置。<b>未读的 D、E 会被覆盖。</b></p>
+          </div>
+          <div class="card soft" style="margin:0">
+            <h4>compact()</h4>
+            <pre style="margin:6px 0 0">把未读的 D、E 移到开头
+position = 2
+limit = capacity</pre>
+            <p class="anno" style="margin-top:8px">未读数据保留，<b>适合"没读完就要接着读"的场景</b>。</p>
+          </div>
+        </div>
+        <p style="margin-top:12px;color:var(--sky)"><b>选择口诀</b>：读完了要复用 → clear；没读完要续读 → compact。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 5</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>堆内 vs 堆外</h4>
+    <div class="kv"><b>allocate</b><span>堆内内存，JVM 管理，GC 友好；但做 IO 时要多一次拷贝到堆外</span></div>
+    <div class="kv"><b>allocateDirect</b><span>堆外（DirectByteBuffer），IO 直达，省一次拷贝；但分配/释放慢，需要手动管理，容易 OOM（不受堆限制）</span></div>
+    <p style="margin-top:10px"><b>实践</b>：只在长生命周期的 IO 缓冲上用 Direct，用完记得让它被回收（或池化）。</p>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / SELECTOR</p>
+  <h2>多路复用：一个线程管一万个连接</h2>
+  <p class="lead">Selector 的本质是<b>把"等数据"这件事交给操作系统</b>。线程不再逐个连接阻塞，而是问操作系统："哪些连接好了？"</p>
+
+  <pre><span class="t">Selector</span> selector = <span class="t">Selector</span>.open();
+<span class="t">ServerSocketChannel</span> server = <span class="t">ServerSocketChannel</span>.open();
+server.bind(<span class="k">new</span> <span class="t">InetSocketAddress</span>(<span class="n">8080</span>));
+server.configureBlocking(<span class="k">false</span>);              <span class="c">// ★ 必须非阻塞</span>
+server.register(selector, <span class="t">SelectionKey</span>.OP_ACCEPT);
+
+<span class="k">while</span> (<span class="k">true</span>) {
+    selector.select();                          <span class="c">// 阻塞在这里，直到有事件就绪</span>
+    <span class="t">Set</span>&lt;<span class="t">SelectionKey</span>&gt; keys = selector.selectedKeys();
+    <span class="t">Iterator</span>&lt;<span class="t">SelectionKey</span>&gt; it = keys.iterator();
+    <span class="k">while</span> (it.hasNext()) {
+        <span class="t">SelectionKey</span> key = it.next();
+        it.remove();                            <span class="c">// ★ 必须手动移除，否则下次还会处理</span>
+        <span class="k">if</span> (key.isAcceptable())   handleAccept(key);
+        <span class="k">else if</span> (key.isReadable()) handleRead(key);
+        <span class="k">else if</span> (key.isWritable()) handleWrite(key);
+    }
+}</pre>
+
+  <div class="card">
+    <h4>四种事件</h4>
+    <div class="kv"><b>OP_ACCEPT</b><span>有新连接进来（服务端）</span></div>
+    <div class="kv"><b>OP_CONNECT</b><span>连接建立完成（客户端）</span></div>
+    <div class="kv"><b>OP_READ</b><span>有数据可读</span></div>
+    <div class="kv"><b>OP_WRITE</b><span>可以写（缓冲区不满）</span></div>
+  </div>
+
+  <h3>底层：select / poll / epoll</h3>
+  <table>
+    <tr><th>机制</th><th>模型</th><th>复杂度</th><th>限制</th></tr>
+    <tr><td>select</td><td>把 fd 集合拷给内核，内核遍历</td><td class="no">O(n)</td><td class="no">最多 1024 个 fd</td></tr>
+    <tr><td>poll</td><td>同 select，但用链表</td><td class="no">O(n)</td><td class="mid">无数量限制</td></tr>
+    <tr><td>epoll</td><td>内核维护红黑树 + 就绪链表</td><td class="ok">O(1) 取就绪</td><td class="ok">无限制</td></tr>
+  </table>
+
+  <div class="card tip">
+    <h4>epoll 为什么快</h4>
+    <p>select 每次调用都要<b>把整个 fd 集合从用户态拷到内核态</b>，再让内核<b>遍历一遍</b>看谁就绪——连接越多越慢。</p>
+    <p>epoll 做了两件事：① 用 <code class="i">epoll_ctl</code> 一次性把 fd 注册进内核的红黑树（不用每次拷）；② 数据就绪时内核<b>主动把 fd 挂到就绪链表</b>，<code class="i">epoll_wait</code> 直接取链表，复杂度 O(1)。</p>
+    <p class="anno">Java NIO 在 Linux 上默认就是 epoll（JDK 的 EPollSelectorImpl）。</p>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / ZERO COPY</p>
+  <h2>零拷贝：省掉的到底是哪几次拷贝</h2>
+  <p class="lead">"零拷贝"不是真的零次拷贝，而是<b>省掉 CPU 参与的那几次</b>。DMA 拷贝还在，但 CPU 不用管。</p>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① 传统 read + write：4 次拷贝、4 次切换</b></p>
+        <div class="layers">
+          <div class="layer"><span class="lname">磁盘</span><span class="ldesc">文件数据</span></div>
+          <div class="layer hot"><span class="lname">① DMA 拷贝</span><span class="ldesc">磁盘 → 内核页缓存</span></div>
+          <div class="layer hot"><span class="lname">② CPU 拷贝</span><span class="ldesc">内核页缓存 → 用户缓冲区（read 返回）</span></div>
+          <div class="layer hot"><span class="lname">③ CPU 拷贝</span><span class="ldesc">用户缓冲区 → socket 缓冲区（write 调用）</span></div>
+          <div class="layer hot"><span class="lname">④ DMA 拷贝</span><span class="ldesc">socket 缓冲区 → 网卡</span></div>
+        </div>
+        <p class="anno">4 次用户态/内核态切换：read 进入、read 返回、write 进入、write 返回。</p>
+      </div>
+
+      <div data-step="2">
+        <p style="margin-top:0"><b>② mmap + write：3 次拷贝</b></p>
+        <p>用 <code class="i">mmap</code> 把内核页缓存<b>映射</b>到用户空间，省掉"内核→用户"那次拷贝，但"用户→socket"还在。</p>
+        <div class="layers">
+          <div class="layer"><span class="lname">磁盘</span><span class="ldesc">文件数据</span></div>
+          <div class="layer"><span class="lname">① DMA</span><span class="ldesc">磁盘 → 页缓存</span></div>
+          <div class="layer cool"><span class="lname">② 省掉</span><span class="ldesc">页缓存直接映射给用户（不再拷贝）</span></div>
+          <div class="layer hot"><span class="lname">③ CPU</span><span class="ldesc">页缓存 → socket 缓冲区</span></div>
+          <div class="layer"><span class="lname">④ DMA</span><span class="ldesc">socket → 网卡</span></div>
+        </div>
+      </div>
+
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ sendfile：2 次拷贝、2 次切换（真正的零拷贝）</b></p>
+        <div class="layers">
+          <div class="layer"><span class="lname">磁盘</span><span class="ldesc">文件数据</span></div>
+          <div class="layer"><span class="lname">① DMA</span><span class="ldesc">磁盘 → 页缓存</span></div>
+          <div class="layer cool"><span class="lname">② 省掉</span><span class="ldesc">不再经过用户空间</span></div>
+          <div class="layer cool"><span class="lname">③ 省掉（gather）</span><span class="ldesc">只把"描述符"追加到 socket 缓冲区</span></div>
+          <div class="layer"><span class="lname">④ DMA gather</span><span class="ldesc">网卡直接从页缓存收集数据</span></div>
+        </div>
+        <p style="color:var(--sky)"><b>整个过程中 CPU 只发指令，不搬数据。</b>这就是"零拷贝"的含义。</p>
+      </div>
+
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ Java 里怎么用</b></p>
+        <pre style="margin:0"><span class="t">FileChannel</span> in = <span class="k">new</span> <span class="t">FileInputStream</span>(file).getChannel();
+<span class="t">SocketChannel</span> out = ...;
+
+<span class="c">// 底层走 sendfile（Linux）</span>
+<span class="k">long</span> sent = in.<span class="m">transferTo</span>(<span class="n">0</span>, in.size(), out);
+
+<span class="c">// 或者用 MappedByteBuffer（mmap）</span>
+<span class="t">MappedByteBuffer</span> mb = in.map(<span class="t">FileChannel</span>.<span class="t">MapMode</span>.READ_ONLY, <span class="n">0</span>, in.size());</pre>
+        <p class="anno">三大 MQ（Kafka / RocketMQ / RabbitMQ）、Netty、Tomcat 的静态文件传输，全都靠这个。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h4>面试要说清的三个数字</h4>
+    <p><b>传统 read+write</b>：4 次拷贝（2 次 DMA + 2 次 CPU）、4 次切换<br>
+    <b>mmap + write</b>：3 次拷贝、4 次切换<br>
+    <b>sendfile</b>：2 次拷贝（都是 DMA）、2 次切换</p>
+    <p style="margin-top:10px">如果只说"零拷贝就是不用拷贝"，会被追问到底。要说"省掉的是 <b>CPU 拷贝</b>和<b>用户态/内核态切换</b>"。</p>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <p class="kicker">07 / SERIALIZATION</p>
+  <h2>序列化：三种方案怎么选</h2>
+
+  <table>
+    <tr><th>方案</th><th>体积</th><th>性能</th><th>可读性</th><th>跨语言</th><th>典型场景</th></tr>
+    <tr><td>Java 原生</td><td class="no">大</td><td class="no">慢</td><td class="no">二进制</td><td class="no">不支持</td><td>几乎不用（仅本地缓存）</td></tr>
+    <tr><td>JSON</td><td class="mid">中</td><td class="mid">中</td><td class="ok">好</td><td class="ok">好</td><td>HTTP API、前后端交互</td></tr>
+    <tr><td>Protobuf</td><td class="ok">小</td><td class="ok">快</td><td class="no">差</td><td class="ok">好</td><td>RPC、内部服务通信</td></tr>
+  </table>
+
+  <div class="card warn">
+    <h4>Java 原生序列化的三个坑</h4>
+    <div class="kv"><b>serialVersionUID</b><span>不显式声明时，编译器按类结构生成。改一个字段，UID 就变，反序列化直接抛 InvalidClassException</span></div>
+    <div class="kv"><b>安全</b><span>反序列化可以构造任意对象（历史上多个 RCE 漏洞都出在这里），<b>不要反序列化不可信数据</b></span></div>
+    <div class="kv"><b>性能</b><span>要写类元信息，比 JSON 还大，且反射调用多</span></div>
+  </div>
+
+  <p>所以生产上：<b>对外用 JSON，对内用 Protobuf 或自定义二进制</b>，Java 原生序列化基本只在 `Serializable` 这个"标记"意义上被用到（比如放进 session、RPC 框架的兜底）。</p>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <p class="kicker">08 / PRACTICE</p>
+  <h2>任务 2：NIO 聊天服务器</h2>
+  <p class="lead">核心是"一个线程 + 一个 Selector + 一个广播列表"。写完这个，你就理解了 Netty 在做什么。</p>
+
+  <pre><span class="k">public class</span> <span class="t">NioChatServer</span> {
+    <span class="k">private static final</span> <span class="t">List</span>&lt;<span class="t">SocketChannel</span>&gt; clients = <span class="k">new</span> <span class="t">CopyOnWriteArrayList</span>&lt;&gt;();
+
+    <span class="k">public static void</span> <span class="m">main</span>(<span class="t">String</span>[] args) <span class="k">throws</span> <span class="t">IOException</span> {
+        <span class="t">Selector</span> selector = <span class="t">Selector</span>.open();
+        <span class="t">ServerSocketChannel</span> server = <span class="t">ServerSocketChannel</span>.open();
+        server.bind(<span class="k">new</span> <span class="t">InetSocketAddress</span>(<span class="n">9000</span>));
+        server.configureBlocking(<span class="k">false</span>);
+        server.register(selector, <span class="t">SelectionKey</span>.OP_ACCEPT);
+
+        <span class="t">ByteBuffer</span> buffer = <span class="t">ByteBuffer</span>.allocate(<span class="n">1024</span>);
+
+        <span class="k">while</span> (<span class="k">true</span>) {
+            selector.select();
+            <span class="t">Iterator</span>&lt;<span class="t">SelectionKey</span>&gt; it = selector.selectedKeys().iterator();
+            <span class="k">while</span> (it.hasNext()) {
+                <span class="t">SelectionKey</span> key = it.next();
+                it.remove();
+                <span class="k">if</span> (key.isAcceptable()) {
+                    <span class="t">SocketChannel</span> c = server.accept();
+                    c.configureBlocking(<span class="k">false</span>);
+                    c.register(selector, <span class="t">SelectionKey</span>.OP_READ);
+                    clients.add(c);
+                    System.out.println(<span class="s">"新用户，当前 "</span> + clients.size() + <span class="s">" 人"</span>);
+                } <span class="k">else if</span> (key.isReadable()) {
+                    <span class="t">SocketChannel</span> c = (<span class="t">SocketChannel</span>) key.channel();
+                    buffer.clear();
+                    <span class="k">int</span> n = c.read(buffer);
+                    <span class="k">if</span> (n == -<span class="n">1</span>) {              <span class="c">// 客户端断开</span>
+                        clients.remove(c); c.close(); key.cancel(); <span class="k">continue</span>;
+                    }
+                    buffer.flip();
+                    <span class="k">byte</span>[] data = <span class="k">new byte</span>[buffer.remaining()];
+                    buffer.get(data);
+                    <span class="t">String</span> msg = <span class="k">new</span> <span class="t">String</span>(data, <span class="t">StandardCharsets</span>.UTF_8);
+                    <span class="m">broadcast</span>(msg, c);
+                }
+            }
+        }
+    }
+
+    <span class="k">private static void</span> <span class="m">broadcast</span>(<span class="t">String</span> msg, <span class="t">SocketChannel</span> from) <span class="k">throws</span> <span class="t">IOException</span> {
+        <span class="t">ByteBuffer</span> out = <span class="t">ByteBuffer</span>.wrap((from == <span class="k">null</span> ? <span class="s">"[系统] "</span> : <span class="s">"[用户] "</span>) + msg + <span class="s">"\n"</span>);
+        <span class="k">for</span> (<span class="t">SocketChannel</span> c : clients) {
+            <span class="k">if</span> (c != from) { out.rewind(); c.write(out); }   <span class="c">// ★ 每次写前 rewind</span>
+        }
+    }
+}</pre>
+
+  <div class="card warn">
+    <h4>四个必踩的坑</h4>
+    <div class="kv"><b>① 忘了 it.remove()</b><span>同一个事件会被重复处理，直到抛 CancelledKeyException</span></div>
+    <div class="kv"><b>② 忘了 flip()</b><span>写进 buffer 后直接读，读到空</span></div>
+    <div class="kv"><b>③ 写没写完</b><span><code class="i">write()</code> 不保证一次写完，返回值可能是 0 或小于剩余量，需要 while + OP_WRITE 处理</span></div>
+    <div class="kv"><b>④ 半包/粘包</b><span>TCP 是字节流，一次 read 可能是半个消息或两个半消息。需要"长度前缀"或分隔符来切分</span></div>
+  </div>
+
+  <div class="card tip">
+    <h4>半包粘包怎么解决</h4>
+    <p>三种常见方案：① <b>定长</b>（每条消息固定长度，简单但浪费）；② <b>分隔符</b>（如换行，适合文本协议）；③ <b>长度前缀</b>（前 4 字节是长度，后面是内容，最通用）。</p>
+    <p class="anno">Netty 的 <code class="i">LengthFieldBasedFrameDecoder</code> 和 <code class="i">LineBasedFrameDecoder</code> 就是干这个的。</p>
+  </div>
+
+  <h3>BIO vs NIO 的实测差异</h3>
+  <table>
+    <tr><th>指标</th><th>BIO + 线程池</th><th>NIO + Selector</th></tr>
+    <tr><td>连接数上限</td><td class="no">受线程数限制（几百到几千）</td><td class="ok">受 fd 限制（几万到几十万）</td></tr>
+    <tr><td>空连接成本</td><td class="no">一个线程（约 1MB 栈）</td><td class="ok">一个 SelectionKey（几十字节）</td></tr>
+    <tr><td>编程复杂度</td><td class="ok">简单</td><td class="no">高（半包、状态机）</td></tr>
+    <tr><td>适合</td><td>短连接、低并发</td><td>长连接、高并发</td></tr>
+  </table>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <p class="kicker">09 / SELF CHECK</p>
+  <h2>今天的<em>自测</em></h2>
+
+  <details><summary>BIO、NIO、AIO 分别属于哪个组合？</summary>
+  <p>BIO = 同步阻塞；NIO = 同步非阻塞（多路复用，数据拷贝仍需自己完成）；AIO = 异步非阻塞（内核拷完回调）。注意"非阻塞 ≠ 异步"。</p></details>
+
+  <details><summary>BIO 为什么撑不住高并发？</summary>
+  <p>一连接一线程：线程栈开销大（默认 1MB）、上下文切换频繁、绝大多数线程阻塞在 read 上浪费资源。线程池只能缓解，不能解决长连接占用问题。</p></details>
+
+  <details><summary><code>flip()</code> 到底做了什么？</summary>
+  <p>把 limit 设为当前 position（数据边界），再把 position 归零。它不复制数据，只改指针，用于从"写模式"切到"读模式"。</p></details>
+
+  <details><summary><code>clear()</code> 和 <code>compact()</code> 的区别？</summary>
+  <p>clear 把 position 置 0、limit 置 capacity，未读数据会被覆盖；compact 把未读数据移到开头，position 设为剩余长度，未读数据保留。读完复用用 clear，没读完要续读用 compact。</p></details>
+
+  <details><summary>堆内 Buffer 和堆外 Buffer 怎么选？</summary>
+  <p>堆内（allocate）由 JVM 管理、GC 友好，但 IO 时需要额外拷贝；堆外（allocateDirect）IO 直达省一次拷贝，但分配慢、不受堆限制、需要池化或注意回收。长生命周期的 IO 缓冲用堆外更划算。</p></details>
+
+  <details><summary>Selector 的核心作用是什么？</summary>
+  <p>把"等待数据到达"交给操作系统，线程只需调用 select() 等待就绪事件，从而实现一个线程管理成千上万个连接，避免一线程一连接的开销。</p></details>
+
+  <details><summary>select、poll、epoll 的差异？</summary>
+  <p>select 每次调用都要把 fd 集合拷进内核并遍历，O(n) 且有 1024 上限；poll 用链表解除数量限制但仍 O(n)；epoll 用红黑树注册 + 就绪链表，取就绪事件 O(1)，无数量限制。</p></details>
+
+  <details><summary>零拷贝省掉了哪几次拷贝？</summary>
+  <p>传统 read+write 是 4 次拷贝（2 次 DMA + 2 次 CPU）、4 次上下文切换。sendfile 降到 2 次 DMA 拷贝、2 次切换，CPU 完全不参与搬运，所以叫"零拷贝"。mmap 居中，3 次拷贝。</p></details>
+
+  <details><summary>Java 里怎么用零拷贝？</summary>
+  <p><code>FileChannel.transferTo/transferFrom</code>（底层 sendfile）、<code>FileChannel.map</code> 得到 MappedByteBuffer（mmap）。Kafka、Netty、Tomcat 静态资源都依赖它。</p></details>
+
+  <details><summary>为什么 NIO 会有半包/粘包问题？怎么解决？</summary>
+  <p>TCP 是字节流，没有消息边界：一次 read 可能拿到半个消息，也可能拿到两个半。解决方式：定长、分隔符、长度前缀（最通用）。Netty 用 LengthFieldBasedFrameDecoder 等解码器处理。</p></details>
+
+  <details><summary>Java 原生序列化为什么不用了？</summary>
+  <p>体积大（带类元信息）、性能差（反射）、跨语言不支持，而且反序列化不可信数据有 RCE 风险。对外用 JSON，内部 RPC 用 Protobuf。</p></details>
+
+  <div class="card tip" style="margin-top:28px">
+    <h4>D3 完成标准（自我验收）</h4>
+    <ul>
+      <li>能画出四象限并说清"非阻塞 ≠ 异步"</li>
+      <li>能解释 flip / clear / compact 各改动哪些指针</li>
+      <li>能讲清 Selector 如何用单线程管理多连接</li>
+      <li>能对比 select / poll / epoll 的复杂度</li>
+      <li>能画出传统 IO 4 次拷贝 → sendfile 2 次拷贝的对比图</li>
+      <li>NIO 聊天服务器能跑通，且能说出四个必踩的坑</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">全中 → 进 D4（设计模式）。<b>零拷贝那张图和 Buffer 四指针必须能画</b>。</p>
+  </div>
+</section>
+
+<footer>W06 · D3 · IO 与 NIO　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+  function render() {
+    items.forEach(el => el.classList.toggle('on', +el.dataset.step <= cur));
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } btnPlay.textContent = '▶ 播放'; }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => { if (cur >= max) { stop(); return; } go(cur + 1); }, 1600);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>

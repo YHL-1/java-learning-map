@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W06 · D5 · 字节码与代码质量</title>
+<style>
+:root{
+  --bg:#070b14; --panel:#0e1728; --panel2:#101c31;
+  --line:rgba(151,171,209,.15); --line2:rgba(151,171,209,.28);
+  --text:#e9effc; --text2:#c3cee4; --muted:#8b99b3; --faint:#5d6a83;
+  --indigo:#818cf8; --indigo2:#a5b4fc; --green:#3ddc97; --cyan:#22d3ee; --violet:#a78bfa; --rose:#fb7185; --amber:#f59e0b;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 50% 40% at 8% -6%,rgba(129,140,248,.11),transparent 60%),
+    radial-gradient(ellipse 45% 42% at 94% 4%,rgba(167,139,250,.08),transparent 62%);
+  background-attachment:fixed}
+a{color:inherit}
+::selection{background:var(--indigo);color:#060a20}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+  background:linear-gradient(90deg,var(--indigo),var(--violet));box-shadow:0 0 14px rgba(129,140,248,.7)}
+nav{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;
+  padding:10px clamp(14px,3vw,40px);backdrop-filter:blur(18px);
+  background:rgba(7,11,20,.78);border-bottom:1px solid var(--line);overflow-x:auto}
+nav .brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--indigo);
+  font-weight:700;white-space:nowrap;margin-right:10px}
+nav a{font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:8px;
+  white-space:nowrap;transition:.2s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+main{width:min(1180px,100%);margin:0 auto;padding:0 clamp(14px,3vw,40px) 90px}
+section{padding:56px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+section.in{opacity:1;transform:none}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:var(--indigo);margin:0 0 8px}
+h2{font-size:clamp(23px,2.4vw,31px);margin:0 0 10px;letter-spacing:-.02em;line-height:1.25}
+h2 em{font-style:normal;color:var(--indigo)}
+.lead{color:var(--muted);margin:0 0 24px;max-width:780px;font-size:14.5px}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+h3::before{content:"";display:inline-block;width:3px;height:14px;border-radius:2px;
+  background:var(--indigo);margin-right:9px;vertical-align:-1px}
+p{margin:10px 0;color:var(--text2)}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--text2)}
+li{margin:5px 0}
+code.i{font-family:var(--mono);font-size:.88em;background:rgba(129,140,248,.13);
+  color:var(--indigo2);padding:1px 6px;border-radius:5px;border:1px solid rgba(129,140,248,.2)}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0}
+.card.soft{background:rgba(255,255,255,.022)}
+.card.warn{border-color:rgba(251,113,133,.3);background:linear-gradient(160deg,rgba(251,113,133,.09),transparent)}
+.card.tip{border-color:rgba(61,220,151,.28);background:linear-gradient(160deg,rgba(61,220,151,.08),transparent)}
+.card h4{margin:0 0 8px;font-size:14.5px;color:var(--text)}
+.card h4 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:6px}
+pre{background:#080e1a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;margin:14px 0;color:#c9d6ee}
+.k{color:#ff9ec7}.t{color:#7dd3fc}.s{color:#a5e887}.c{color:#5d6a83;font-style:italic}
+.n{color:#ffb454}.m{color:#c4b5fd}.hl{background:rgba(129,140,248,.2);border-radius:3px;padding:0 2px}
+.anno{display:inline-block;color:var(--faint);font-size:11.5px}
+header.hero{padding:64px 0 20px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);line-height:1.1;margin:0 0 14px;letter-spacing:-.035em}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--indigo),#c7d2fe 45%,var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:99px;
+  padding:5px 13px;font-size:12px;color:var(--muted)}
+.pill b{color:var(--indigo);font-weight:700}
+.stepper{margin:20px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.stage{padding:26px 22px;min-height:150px;position:relative}
+.ctrl{display:flex;gap:8px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.ctrl button{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text2);
+  border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.ctrl button:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl button:disabled{opacity:.35;cursor:not-allowed}
+.ctrl .idx{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--faint)}
+[data-step]{display:none}
+[data-step].on{display:block;animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.node{border:1px solid var(--line2);border-radius:9px;padding:8px 12px;background:var(--panel2);
+  font-family:var(--mono);font-size:11.5px;transition:.35s;text-align:center;line-height:1.5}
+.node b{display:block;color:var(--indigo);font-size:11px}
+.node small{color:var(--faint);font-size:10px}
+.node.on{border-color:var(--indigo);box-shadow:0 0 20px rgba(129,140,248,.22)}
+.node.ok{border-color:var(--green);background:rgba(61,220,151,.1)}
+.arw{color:var(--faint);font-size:13px}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.04);color:var(--text);font-weight:600;font-size:12.5px}
+td{color:var(--text2)}
+td code{font-family:var(--mono);font-size:12px;color:var(--indigo2)}
+.ok{color:var(--green)}.no{color:var(--rose)}.mid{color:var(--amber)}
+details{border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin:10px 0;
+  background:rgba(255,255,255,.022);transition:.2s}
+details[open]{border-color:rgba(129,140,248,.38);background:rgba(129,140,248,.06)}
+summary{cursor:pointer;font-size:14px;color:var(--text2);list-style:none;display:flex;gap:10px;align-items:flex-start}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--indigo);color:var(--indigo);font-size:11px;display:grid;place-items:center;
+  font-family:var(--mono);margin-top:3px}
+details p{padding-left:29px;margin:10px 0 2px;font-size:13.5px;color:var(--text2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv b{color:var(--indigo2);font-family:var(--mono);font-size:12.5px;flex:0 0 auto;min-width:92px}
+.kv span{font-size:13.5px;color:var(--text2)}
+footer{text-align:center;color:var(--faint);font-size:12px;padding:60px 0 20px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav>
+  <span class="brand">W06 · D5</span>
+  <a href="#s1">五步全景</a>
+  <a href="#s2">class 结构</a>
+  <a href="#s3">javap</a>
+  <a href="#s4">new 三指令</a>
+  <a href="#s5">调用指令</a>
+  <a href="#s6">常量池</a>
+  <a href="#s7">类加载</a>
+  <a href="#s8">代码质量</a>
+  <a href="#s9">自测</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">JAVA 后端 · WEEK 06 · DAY 05 · 12.29</p>
+  <h1>字节码与<em>代码质量</em></h1>
+  <p class="lead">今天不学新 API，而是<b>往下看一层</b>：你写的每一行 Java，被编译成了什么。看懂了字节码，JIT、反射、"为什么 new 是三条指令"这些问题就都通了。</p>
+  <div class="meta">
+    <span class="pill">W06 · D5</span>
+    <span class="pill">预计 <b>2.5 h</b></span>
+    <span class="pill">产出：<b>javap 分析 + 静态检查</b></span>
+  </div>
+  <div class="card soft">
+    <h4>今天的三个任务 <span>对应原计划</span></h4>
+    <div class="kv"><b>01</b><span>字节码、类加载直觉、内存模型预习</span></div>
+    <div class="kv"><b>02</b><span>用 javap 分析一个类的字节码，接入 SpotBugs/Checkstyle</span></div>
+    <div class="kv"><b>03</b><span>解释从 .java 到类加载执行的全过程</span></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <p class="kicker">01 / PIPELINE</p>
+  <h2>五步全景：你的代码经历了什么</h2>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0">把 W05 D1 那张图补全，中间这一层就是今天的重点。</p>
+        <div class="chain">
+          <div class="node on"><b>.java</b>源码</div><span class="arw">→</span>
+          <div class="node"><b>javac</b>前端</div><span class="arw">→</span>
+          <div class="node"><b>.class</b>字节码</div><span class="arw">→</span>
+          <div class="node"><b>类加载</b>Loading</div><span class="arw">→</span>
+          <div class="node"><b>执行</b>解释+JIT</div>
+        </div>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>① 前端：javac 把源码变成 AST</b></p>
+        <div class="chain">
+          <div class="node on">词法分析<small>字符 → Token</small></div><span class="arw">→</span>
+          <div class="node on">语法分析<small>Token → AST</small></div><span class="arw">→</span>
+          <div class="node on">语义分析<small>类型检查</small></div>
+        </div>
+        <p class="anno">W05 那一轮聊的"语义检查"就发生在这一步。</p>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>② 中端：擦除 + 语法糖展开</b></p>
+        <div class="kv"><b>擦除</b><span>泛型 T → 上界（W05 D4）</span></div>
+        <div class="kv"><b>解糖</b><span>foreach → 迭代器；try-with-resources → 嵌套 try-finally；自动装箱 → valueOf；字符串拼接 → StringBuilder / invokedynamic</span></div>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>③ 后端：生成字节码</b>　写入 .class 文件（魔数 + 常量池 + 方法表 + 属性表）。</p>
+      </div>
+      <div data-step="5">
+        <p style="margin-top:0"><b>④ 运行时：类加载 + 执行</b>　加载 → 验证 → 准备 → 解析 → 初始化，然后解释执行，热点代码 JIT。</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 5</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <p class="kicker">02 / CLASS FILE</p>
+  <h2>class 文件：十段结构</h2>
+  <p class="lead">不用背全部，但要知道"魔数、常量池、方法表"这三个的位置——面试问"class 文件长什么样"就靠它。</p>
+
+  <table>
+    <tr><th>顺序</th><th>内容</th><th>说明</th></tr>
+    <tr><td>1</td><td><code>CAFEBABE</code></td><td>魔数，固定值，JVM 用它确认"这是个 class 文件"</td></tr>
+    <tr><td>2</td><td>minor / major version</td><td>版本号，Java 8=52，17=61，21=65。高版本不能被低版本 JVM 加载</td></tr>
+    <tr><td>3</td><td><b>常量池</b></td><td>字面量 + 符号引用（类名、字段名、方法名、描述符）</td></tr>
+    <tr><td>4</td><td>访问标志</td><td>public / final / interface / abstract …</td></tr>
+    <tr><td>5</td><td>this / super</td><td>当前类、父类的常量池索引</td></tr>
+    <tr><td>6</td><td>接口表</td><td>实现了哪些接口</td></tr>
+    <tr><td>7</td><td>字段表</td><td>字段名、描述符、访问标志、属性</td></tr>
+    <tr><td>8</td><td>方法表</td><td>方法名、描述符、<b>Code 属性（真正的字节码指令）</b></td></tr>
+    <tr><td>9</td><td>属性表</td><td>Signature（泛型签名）、Exceptions、SourceFile 等</td></tr>
+  </table>
+
+  <div class="card tip">
+    <h4>两个名字别搞混</h4>
+    <div class="kv"><b>魔数</b><span><code class="i">CAFEBABE</code>，0xCAFEBABE，James Gosling 起的"咖啡宝贝"梗</span></div>
+    <div class="kv"><b>描述符</b><span>用符号表示类型：<code class="i">I</code>=int、<code class="i">Ljava/lang/String;</code>=String、<code class="i">[I</code>=int[]、<code class="i">(I)Ljava/lang/String;</code>=接收 int 返回 String 的方法</span></div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <p class="kicker">03 / JAVAP</p>
+  <h2>用 javap 看字节码</h2>
+
+  <pre><span class="c">// 源码</span>
+<span class="k">public class</span> <span class="t">Demo</span> {
+    <span class="k">public int</span> <span class="m">add</span>(<span class="k">int</span> a, <span class="k">int</span> b) { <span class="k">return</span> a + b; }
+}
+
+<span class="c">// javap -c Demo.class</span>
+<span class="k">public int</span> <span class="m">add</span>(<span class="k">int</span>, <span class="k">int</span>);
+  Code:
+     0: iload_1        <span class="c">// 把第 1 个参数 a 压栈</span>
+     1: iload_2        <span class="c">// 把第 2 个参数 b 压栈</span>
+     2: iadd           <span class="c">// 弹出两个，相加，结果压栈</span>
+     3: ireturn        <span class="c">// 返回栈顶的 int</span></pre>
+
+  <div class="card">
+    <h4>常用参数</h4>
+    <div class="kv"><b>-c</b><span>反汇编，显示字节码指令</span></div>
+    <div class="kv"><b>-v</b><span>verbose，显示常量池、版本号、访问标志等全部信息</span></div>
+    <div class="kv"><b>-p</b><span>显示 private 成员（默认只显示 public/protected）</span></div>
+    <div class="kv"><b>-l</b><span>显示行号表和局部变量表</span></div>
+    <div class="kv"><b>-s</b><span>显示签名（描述符）</span></div>
+  </div>
+
+  <p>一个实用场景：<b>直接看编译器怎么"翻译"你的语法糖</b>。</p>
+  <pre><span class="c">// 源码：foreach</span>
+<span class="k">for</span> (<span class="t">String</span> s : list) { ... }
+
+<span class="c">// javap -c 之后：</span>
+<span class="t">Iterator</span> it = list.iterator();
+<span class="k">while</span> (it.hasNext()) { <span class="t">String</span> s = (<span class="t">String</span>) it.next(); ... }</pre>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <p class="kicker">04 / NEW</p>
+  <h2>为什么 <code>new</code> 是三条指令</h2>
+  <p class="lead">这是字节码部分最高频的面试题。答案是：<b>new 只负责分配内存，不负责初始化</b>。</p>
+
+  <pre><span class="c">// 源码</span>
+<span class="t">Order</span> o = <span class="k">new</span> <span class="t">Order</span>();
+
+<span class="c">// 字节码（4 条，因为还要存到局部变量）</span>
+0: <span class="hl">new</span>           #2      <span class="c">// 1. 分配内存，压入"未初始化对象"的引用</span>
+3: <span class="hl">dup</span>                   <span class="c">// 2. 复制栈顶引用（因为下一步会消耗一个）</span>
+4: <span class="hl">invokespecial</span> #3      <span class="c">// 3. 调用构造器 &lt;init&gt;，消耗掉那个副本</span>
+7: astore_1              <span class="c">// 4. 把剩下的引用存进局部变量 o</span></pre>
+
+  <div class="stepper" data-stepper>
+    <div class="stage">
+      <div data-step="1">
+        <p style="margin-top:0"><b>① <code class="i">new</code>：分配 + 压栈</b></p>
+        <p>在堆上分配内存，所有字段赋零值（这就是"对象内存布局"里的初始状态），然后把<b>指向这块内存的引用</b>压入操作数栈。</p>
+        <p class="anno">此时对象还没"构造完成"，但引用已经存在了。</p>
+      </div>
+      <div data-step="2">
+        <p style="margin-top:0"><b>② <code class="i">dup</code>：为什么要复制</b></p>
+        <p>因为 <code class="i">invokespecial</code> 调用构造器时，会<b>消耗</b>栈顶的引用（作为 this）。如果只有一个引用，调用完就没了，后面就没法赋值给变量 o。</p>
+        <p>所以先复制一份：一份给构造器用掉，一份留给 <code class="i">astore</code>。</p>
+        <div class="chain">
+          <div class="node">栈: [ref]</div><span class="arw">dup →</span>
+          <div class="node on">栈: [ref, ref]</div>
+        </div>
+      </div>
+      <div data-step="3">
+        <p style="margin-top:0"><b>③ <code class="i">invokespecial</code>：执行构造器</b></p>
+        <p>调用 <code class="i">&lt;init&gt;</code>，执行字段初始化和构造器体。它会<b>弹出</b>一个引用作为 this，剩下的那个还在栈上。</p>
+        <p class="anno">所以"对象创建"其实分两半：<code class="i">new</code> 分配 + <code class="i">&lt;init&gt;</code> 初始化。这也是 DCL 单例需要 volatile 的根源——引用赋值可能早于初始化完成。</p>
+      </div>
+      <div data-step="4">
+        <p style="margin-top:0"><b>④ <code class="i">astore_1</code>：存进局部变量表</b></p>
+        <p>把栈上剩下的引用存到第 1 个槽位（0 号是 this，静态方法从 0 开始）。</p>
+        <p style="margin-top:10px;color:var(--indigo)"><b>一句话回答面试</b>："new 只分配内存并把引用入栈，dup 是为了给构造器留一份，invokespecial 执行 <code class="i">&lt;init&gt;</code> 完成初始化，最后 astore 存入局部变量。"</p>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button data-act="prev">上一步</button>
+      <button data-act="next">下一步</button>
+      <button data-act="play">▶ 播放</button>
+      <button data-act="reset">重置</button>
+      <span class="idx">0 / 4</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <p class="kicker">05 / INVOKE</p>
+  <h2>五条方法调用指令</h2>
+
+  <table>
+    <tr><th>指令</th><th>调用场景</th><th>分派方式</th></tr>
+    <tr><td><code>invokestatic</code></td><td>静态方法</td><td>静态绑定</td></tr>
+    <tr><td><code>invokespecial</code></td><td>构造器、private、super 调用</td><td>静态绑定</td></tr>
+    <tr><td><code>invokevirtual</code></td><td>普通实例方法</td><td><b>动态分派</b>（查 vtable）</td></tr>
+    <tr><td><code>invokeinterface</code></td><td>接口方法</td><td><b>动态分派</b>（查 itable）</td></tr>
+    <tr><td><code>invokedynamic</code></td><td>Lambda、字符串拼接（Java 9+）</td><td>运行时绑定 CallSite</td></tr>
+  </table>
+
+  <div class="card">
+    <h4>这解释了 W05 D1 的多态</h4>
+    <p>"编译看左边，运行看右边"的底层就是：<code class="i">invokevirtual</code> 在运行时从<b>对象头</b>取实际类型的方法表（vtable），再查表找到真正的方法地址。</p>
+    <p class="anno">所以字段不参与多态——字段访问用的是 <code class="i">getfield</code> + 常量池里的符号引用，没有查表这一步。</p>
+  </div>
+
+  <div class="card tip">
+    <h4>为什么 Lambda 用 invokedynamic</h4>
+    <p>因为 Lambda 表达式在编译时<b>不生成内部类</b>，而是留一个 <code class="i">invokedynamic</code> 指令，在<b>第一次执行时</b>由 <code class="i">LambdaMetafactory</code> 生成实现类并绑定。</p>
+    <p>好处：启动更快（不用编译期生成大量类）、实现更灵活。代价：第一次调用有额外开销（可以用 <code class="i">-Djdk.internal.lambda.dumpProxyClasses</code> 看生成的类）。</p>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <p class="kicker">06 / CONSTANT POOL</p>
+  <h2>常量池：符号引用与直接引用</h2>
+  <p class="lead">class 文件里所有"名字"都存在常量池里。类加载的"解析"阶段，就是把这些<b>符号引用</b>换成内存里的<b>直接引用</b>。</p>
+
+  <pre><span class="c">// 源码</span>
+System.out.println(<span class="s">"hello"</span>);
+
+<span class="c">// 字节码</span>
+0: getstatic     #2   <span class="c">// Field java/lang/System.out:Ljava/io/PrintStream;</span>
+3: ldc           #3   <span class="c">// String hello</span>
+5: invokevirtual #4   <span class="c">// Method java/io/PrintStream.println:(Ljava/lang/String;)V</span></pre>
+
+  <div class="card">
+    <h4>#2 #3 #4 是什么</h4>
+    <p>常量池的索引。<code class="i">#4</code> 指向一个 <b>Methodref</b>，里面记录着"类名 + 方法名 + 描述符"——这就是<b>符号引用</b>，它只是字符串，还不知道方法在内存的哪个地址。</p>
+    <p>类加载的<b>解析阶段</b>会把它换成真正的内存地址（直接引用），之后调用就不用再查了。</p>
+  </div>
+
+  <div class="card warn">
+    <h4>这解释了三个常见报错</h4>
+    <div class="kv"><b>NoClassDefFoundError</b><span>解析阶段找不到常量池引用的类</span></div>
+    <div class="kv"><b>NoSuchMethodError</b><span>类找到了，但方法签名对不上（通常是依赖版本冲突）</span></div>
+    <div class="kv"><b>NoSuchFieldError</b><span>字段对不上，同样常见于版本冲突</span></div>
+  </div>
+
+  <h3>字符串常量池 ≠ class 常量池</h3>
+  <p>这两个经常被混为一谈：</p>
+  <table>
+    <tr><th></th><th>class 文件常量池</th><th>运行时常量池</th><th>字符串常量池</th></tr>
+    <tr><td>位置</td><td>.class 文件里</td><td>方法区（元空间）</td><td>堆</td></tr>
+    <tr><td>内容</td><td>字面量 + 符号引用</td><td>加载后放进去的常量</td><td>String 字面量对象</td></tr>
+    <tr><td>谁用</td><td>编译期</td><td>运行期</td><td><code>intern()</code>、<code>==</code> 判断</td></tr>
+  </table>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <p class="kicker">07 / CLASSLOADING</p>
+  <h2>类加载：五阶段与双亲委派</h2>
+  <p class="lead">W05 D1 提过一次，W08 会展开。这里先把关键点固定下来。</p>
+
+  <div class="chain">
+    <div class="node on"><b>加载</b><small>读 class → 方法区</small></div><span class="arw">→</span>
+    <div class="node on"><b>验证</b><small>格式/语义/字节码</small></div><span class="arw">→</span>
+    <div class="node on"><b>准备</b><small>静态变量赋零值</small></div><span class="arw">→</span>
+    <div class="node on"><b>解析</b><small>符号 → 直接引用</small></div><span class="arw">→</span>
+    <div class="node on"><b>初始化</b><small>执行 &lt;clinit&gt;</small></div>
+  </div>
+
+  <div class="card">
+    <h4>双亲委派：先问爸爸，爸爸不行再自己来</h4>
+    <pre style="margin:8px 0 0"><span class="k">protected</span> <span class="t">Class</span>&lt;?&gt; <span class="m">loadClass</span>(<span class="t">String</span> name, <span class="k">boolean</span> resolve) {
+    <span class="k">synchronized</span> (getClassLoadingLock(name)) {
+        <span class="t">Class</span>&lt;?&gt; c = findLoadedClass(name);        <span class="c">// ① 已加载？</span>
+        <span class="k">if</span> (c == <span class="k">null</span>) {
+            <span class="k">try</span> {
+                <span class="k">if</span> (parent != <span class="k">null</span>) c = parent.loadClass(name, <span class="k">false</span>);   <span class="c">// ② 委派父</span>
+                <span class="k">else</span>            c = findBootstrapClassOrNull(name);
+            } <span class="k">catch</span> (<span class="t">ClassNotFoundException</span> e) { }
+            <span class="k">if</span> (c == <span class="k">null</span>) c = findClass(name);   <span class="c">// ③ 父加载不了，自己来</span>
+        }
+        <span class="k">return</span> c;
+    }
+}</pre>
+  </div>
+
+  <div class="card warn">
+    <h4>两个经常答错的地方</h4>
+    <div class="kv"><b>目的</b><span>首要目的是<b>避免类重复加载</b>（保证同一个类在 JVM 里唯一），安全只是附带效果</span></div>
+    <div class="kv"><b>方向</b><span>"父优先"，不是"父垄断"。父加载不了（findClass 抛异常）才由自己加载</span></div>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <p class="kicker">08 / QUALITY</p>
+  <h2>代码质量：四个工具各管一段</h2>
+
+  <table>
+    <tr><th>工具</th><th>查什么</th><th>典型问题</th><th>能否自动修</th></tr>
+    <tr><td>Checkstyle</td><td><b>格式与规范</b></td><td>缩进、命名、import 顺序、Javadoc 缺失</td><td class="ok">大多能</td></tr>
+    <tr><td>PMD</td><td><b>编码坏味道</b></td><td>未使用的变量、空的 catch、过长方法、重复代码</td><td class="mid">部分</td></tr>
+    <tr><td>SpotBugs</td><td><b>字节码级缺陷</b></td><td>NPE 风险、equals/hashCode 不一致、资源未关闭</td><td class="no">不能，但准确率高</td></tr>
+    <tr><td>SonarQube</td><td><b>综合</b>（上面三个 + 覆盖率 + 重复率）</td><td>技术债、安全漏洞</td><td class="mid">部分</td></tr>
+  </table>
+
+  <div class="card">
+    <h4>SpotBugs 为什么能发现 NPE</h4>
+    <p>因为它<b>分析的是字节码</b>，能看到真实的控制流。比如：</p>
+    <pre style="margin:8px 0 0"><span class="t">String</span> s = map.get(key);      <span class="c">// 可能返回 null</span>
+<span class="k">if</span> (s.length() > <span class="n">0</span>) { ... }   <span class="c">// SpotBugs: Possible null pointer dereference</span></pre>
+    <p style="margin-top:10px">它不需要运行代码，靠数据流分析推断"这条路径上 s 可能是 null"。</p>
+  </div>
+
+  <h3>Maven 里接入</h3>
+  <pre>&lt;plugin&gt;
+  &lt;groupId&gt;com.github.spotbugs&lt;/groupId&gt;
+  &lt;artifactId&gt;spotbugs-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;4.8.3.0&lt;/version&gt;
+  &lt;configuration&gt;
+    &lt;effort&gt;Max&lt;/effort&gt;
+    &lt;threshold&gt;Low&lt;/threshold&gt;      <span class="c">&lt;!-- 报所有级别 --&gt;</span>
+    &lt;failOnError&gt;true&lt;/failOnError&gt; <span class="c">&lt;!-- 有问题就构建失败 --&gt;</span>
+  &lt;/configuration&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;phase&gt;verify&lt;/phase&gt;       <span class="c">&lt;!-- 在 verify 阶段跑 --&gt;</span>
+      &lt;goals&gt;&lt;goal&gt;check&lt;/goal&gt;&lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+&lt;/plugin&gt;</pre>
+
+  <div class="card tip">
+    <h4>接入策略建议</h4>
+    <p>不要一上来就 <code class="i">failOnError=true</code>——老项目会有几百个警告，直接阻断构建没人受得了。<br>
+    正确做法：<b>先只报告不阻断</b>（生成 HTML 报告），挑出高危规则（NPE、资源泄漏、equals 不一致）逐步清零，最后再开启阻断。</p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <p class="kicker">09 / SELF CHECK</p>
+  <h2>今天的<em>自测</em></h2>
+
+  <details><summary>class 文件的魔数是什么？有什么用？</summary>
+  <p><code>CAFEBABE</code>（0xCAFEBABE）。JVM 加载时先读这 4 个字节确认是合法的 class 文件，防止把其他格式的文件误当字节码解析。</p></details>
+
+  <details><summary>Java 8 / 17 / 21 的 class 版本号分别是多少？</summary>
+  <p>52 / 61 / 65。高版本编译的 class 不能被低版本 JVM 加载，会抛 UnsupportedClassVersionError。</p></details>
+
+  <details><summary>为什么 <code>new</code> 需要 dup 指令？</summary>
+  <p>因为 invokespecial 调用构造器时会消耗栈顶的引用作为 this。先 dup 复制一份，一份给构造器用掉，一份留给 astore 存入局部变量。</p></details>
+
+  <details><summary>对象创建分哪两步？这和 DCL 单例有什么关系？</summary>
+  <p>new 分配内存（字段赋零值）+ invokespecial 执行 &lt;init&gt;。这两步可能被指令重排——引用赋值可能早于构造完成。DCL 单例如果没有 volatile，其他线程可能拿到未初始化完的对象。</p></details>
+
+  <details><summary>五条方法调用指令分别对应什么场景？</summary>
+  <p>invokestatic（静态方法）、invokespecial（构造器/private/super）、invokevirtual（普通实例方法，动态分派）、invokeinterface（接口方法，动态分派）、invokedynamic（Lambda、字符串拼接）。</p></details>
+
+  <details><summary>为什么 Lambda 用 invokedynamic 而不是内部类？</summary>
+  <p>避免编译期生成大量内部类（启动更快、体积更小），由 LambdaMetafactory 在第一次执行时动态生成实现并绑定 CallSite。代价是首次调用有额外开销。</p></details>
+
+  <details><summary>符号引用和直接引用有什么区别？</summary>
+  <p>符号引用是常量池里的"字符串描述"（类名+方法名+描述符），还不知道内存地址；直接引用是解析后得到的真正内存地址或偏移量。类加载的解析阶段就做这个转换。</p></details>
+
+  <details><summary>NoClassDefFoundError 和 NoSuchMethodError 分别是什么阶段的问题？</summary>
+  <p>都发生在链接/解析或运行时。NoClassDefFoundError 是找不到类（编译时存在、运行时缺失）；NoSuchMethodError 是类找到了但方法签名不匹配，通常是依赖版本冲突导致。</p></details>
+
+  <details><summary>class 常量池、运行时常量池、字符串常量池有什么区别？</summary>
+  <p>class 常量池在 .class 文件里（字面量+符号引用）；运行时常量池在方法区，是 class 常量池加载后的形态；字符串常量池在堆里，专门存 String 字面量对象，供 intern 和 == 使用。</p></details>
+
+  <details><summary>Checkstyle、PMD、SpotBugs 各查什么？</summary>
+  <p>Checkstyle 查格式规范（缩进、命名、import）；PMD 查编码坏味道（空 catch、未用变量、过长方法）；SpotBugs 分析字节码查真实缺陷（NPE、资源泄漏、equals/hashCode 不一致）。三者互补。</p></details>
+
+  <details><summary>静态检查工具一上来就 failOnError 有什么问题？</summary>
+  <p>老项目通常有几百个历史警告，直接阻断会让所有人无法提交。应该先只报告、挑选高危规则逐步修复，最后再开启阻断。</p></details>
+
+  <div class="card tip" style="margin-top:28px">
+    <h4>D5 完成标准（自我验收）</h4>
+    <ul>
+      <li>能说出 class 文件的十段结构，知道魔数和版本号的位置</li>
+      <li>能用 javap -c / -v 分析一个类的字节码</li>
+      <li>能解释 new / dup / invokespecial / astore 四步</li>
+      <li>能说出五条 invoke 指令的场景与分派方式</li>
+      <li>能区分 class 常量池、运行时常量池、字符串常量池</li>
+      <li>能说出三个静态检查工具的差异并接入 Maven</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">全中 → 进 D6（周项目：订单服务 v1 + 词频统计）。</p>
+  </div>
+</section>
+
+<footer>W06 · D5 · 字节码与代码质量　|　本页离线可用，直接双击打开</footer>
+</main>
+
+<script>
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (scrollY / Math.max(1, h) * 100) + '%';
+}, {passive:true});
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold: .06});
+document.querySelectorAll('section').forEach(s => io.observe(s));
+document.querySelectorAll('[data-stepper]').forEach(root => {
+  const stage = root.querySelector('.stage');
+  const items = [...stage.querySelectorAll('[data-step]')];
+  if (!items.length) return;
+  const max = Math.max(...items.map(i => +i.dataset.step));
+  const idxEl = root.querySelector('.idx');
+  const btnPrev = root.querySelector('[data-act="prev"]');
+  const btnNext = root.querySelector('[data-act="next"]');
+  const btnPlay = root.querySelector('[data-act="play"]');
+  const btnReset = root.querySelector('[data-act="reset"]');
+  let cur = 0, timer = null;
+  function render() {
+    items.forEach(el => el.classList.toggle('on', +el.dataset.step <= cur));
+    idxEl.textContent = cur + ' / ' + max;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === max;
+    if (cur === max) stop();
+  }
+  function go(n) { cur = Math.max(0, Math.min(max, n)); render(); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } btnPlay.textContent = '▶ 播放'; }
+  function play() {
+    if (timer) { stop(); return; }
+    if (cur >= max) cur = 0;
+    btnPlay.textContent = '❚❚ 暂停';
+    timer = setInterval(() => { if (cur >= max) { stop(); return; } go(cur + 1); }, 1600);
+    go(cur + 1);
+  }
+  btnPrev.onclick = () => { stop(); go(cur - 1); };
+  btnNext.onclick = () => { stop(); go(cur + 1); };
+  btnPlay.onclick = play;
+  btnReset.onclick = () => { stop(); go(0); };
+  render();
+});
+</script>
+</body>
+</html>
